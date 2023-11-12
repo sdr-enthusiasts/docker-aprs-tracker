@@ -1,0 +1,36 @@
+#!/command/with-contenv bash
+# shellcheck shell=bash
+
+# Check to make sure the correct GPSD parameters are defined.
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2023, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+
+#!/command/with-contenv bash
+# shellcheck shell=bash disable=SC1091,SC2015,SC2164,SC2068,SC2145
+
+source /scripts/common
+s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
+
+"${s6wrap[@]}" echo "Started as an s6 init script"
+
+# Note - these variables have been preset with a value in Dockerfile
+# but can be overwritten by docker environment variables
+
+sed -i "s/START_DAEMON=.*/START_DAEMON=\"$START_DAEMON\"/g" /etc/default/gpsd
+sed -i "s/GPSD_OPTIONS=.*/GPSD_OPTIONS=\"$GPSD_OPTIONS\"/g" /etc/default/gpsd
+sed -i "s/DEVICES=.*/DEVICES=\"$DEVICES\"/g" /etc/default/gpsd
+sed -i "s/USBAUTO=.*/USBAUTO=\"$USBAUTO\"/g" /etc/default/gpsd
+sed -i "s/GPSD_SOCKET=.*/GPSD_SOCKET=\"$GPSD_SOCKET\"/g" /etc/default/gpsd

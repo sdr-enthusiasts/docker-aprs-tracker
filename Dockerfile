@@ -4,6 +4,13 @@ LABEL org.opencontainers.image.source = "https://github.com/sdr-enthusiasts/dock
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+# start options presets for GPSD:
+ENV START_DAEMON="false"
+ENV GPSD_OPTIONS="-n"
+ENV DEVICES="/dev/ttyACM0"
+ENV USBAUTO="true"
+ENV GPSD_SOCKET="/var/run/gpsd.sock"
+
 RUN set -x && \
     # generic packages
     TEMP_PACKAGES=() && \
@@ -16,8 +23,8 @@ RUN set -x && \
     # packages for GPSD
     KEPT_PACKAGES+=(gpsd) && \
     KEPT_PACKAGES+=(gpsd-clients) && \
-    KEPT_PACKAGES+=(libgps-dev) && \
-    KEPT_PACKAGES+=(libgps28) && \
+    #KEPT_PACKAGES+=(libgps-dev) && \
+    #KEPT_PACKAGES+=(libgps28) && \
     # packages for direwolf
     KEPT_PACKAGES+=(direwolf) && \
     #
