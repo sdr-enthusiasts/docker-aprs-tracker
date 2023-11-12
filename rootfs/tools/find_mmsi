@@ -1,0 +1,28 @@
+#!/bin/bash
+#shellcheck shell=bash
+#shellcheck disable=SC2015
+
+# find_mmsi:
+# provide info about an MMSI from VesselAlert db
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+
+# redirect stderr to stdout so it's picked up in the docker logs
+exec 2>&1
+# all errors will show a line number and the command used to produce the error
+[[ -n "$VESSELDBFILE" ]] && VESSELDBFILE="/data/vessel.db" || true
+
+sed 's/"\s\+/"\n/g' "$VESSELDBFILE" | grep "$1" | sort
