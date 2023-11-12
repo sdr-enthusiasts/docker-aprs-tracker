@@ -1,8 +1,26 @@
 # sdr-enthusiasts/docker-direwolf
 
+Table of Contents
+
+- [sdr-enthusiasts/docker-direwolf](#sdr-enthusiastsdocker-direwolf)
+  - [Introduction](#introduction)
+  - [Prerequisites](#prerequisites)
+  - [Multi Architecture Support](#multi-architecture-support)
+  - [Up-and-Running with Docker Compose](#up-and-running-with-docker-compose)
+  - [Runtime Environment Variables](#runtime-environment-variables)
+    - [General parameters](#general-parameters)
+  - [Logging](#logging)
+  - [Acknowledgements](#acknowledgements)
+  - [Getting Help](#getting-help)
+  - [Summary of License Terms](#summary-of-license-terms)
+
 [![Discord](https://img.shields.io/discord/734090820684349521)](https://discord.gg/sTf9uYF)
 
 ## Introduction
+
+
+
+NOTE - DO NOT USE - NOT YET READY FOR PRIMETIME / DEPLOYMENT. CHECK LATER IF THIS MESSAGE IS REMOVED
 
 Docker container of [WB2OSZ's excellent APRS software TNC "DireWolf"](https://github.com/wb2osz/direwolf/).
 Builds and runs on `arm64`, `armv7/armhf`, and `amd64/x86`.
