@@ -1,0 +1,52 @@
+#!/command/with-contenv bash
+# shellcheck shell=bash
+
+# Check to make sure the correct soundcard parameters are defined.
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2023, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+
+#!/command/with-contenv bash
+# shellcheck shell=bash disable=SC1091,SC2015,SC2164,SC2068,SC2145
+
+source /scripts/common
+s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
+
+"${s6wrap[@]}" echo "Started as an s6 init script"
+
+# This section is adapted from https://github.com/kx1t/docker-noisecapt/blob/main/rootfs/etc/services.d/noisecapt/run
+
+if [[ -z "$AUDIOCARD" ]]; then
+    AUDIOCARD="$(arecord --list-devices | sed  -n 's/.*card \([0-9][0-9]*\).*/\1/p')"
+    if [[ -z "$AUDIOCARD" ]]; then
+        "${s6wrap[@]}" echo "[ERROR] - cannot determine the audio card."
+        "${s6wrap[@]}" echo "This is what we see:"
+        "${s6wrap[@]}" arecord --list-devices
+        "${s6wrap[@]}" echo "Fix this, or set variable AUDIOCARD to the desired audio card number."
+        exit 1
+    fi
+fi
+
+# Figure out which NumID the mute button is unmute (which means set Mic Capture Switch = on):
+"${s6wrap[@]}" echo "Unmute the microphone on Audio Card $AUDIOCARD:"
+"${s6wrap[@]}" amixer -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Mic Capture Switch' | sed  -n 's/numid=\([0-9][0-9]*\).*/\1/p')" on
+#
+# Get the NumID and max value for the audio input level and max it out
+"${s6wrap[@]}" echo "Set microphone volume to max on Audio Card $AUDIOCARD:"
+"${s6wrap[@]}" amixer -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Mic Capture Volume' | sed  -n 's/numid=\([0-9][0-9]*\).*/\1/p')" "$(amixer --card "$AUDIOCARD" contents|grep -A1 'Mic Capture Volume' | sed  -n 's/.*max=\([0-9][0-9]*\).*/\1/p')"
+#
+# Last - switch the AGC off as this will mess with the audio levels
+"${s6wrap[@]}" echo "Switch off microphone ACG on Audio Card $AUDIOCARD:"
+"${s6wrap[@]}" amixer -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Auto Gain Control' | sed  -n 's/numid=\([0-9][0-9]*\).*/\1/p')" off

@@ -57,6 +57,7 @@ RUN set -x && \
     KEPT_PACKAGES+=(ucf) && \
     # packages for direwolf
     KEPT_PACKAGES+=(direwolf) && \
+    KEPT_PACKAGES+=(alsa-utils) && \
     #
     # install packages
     apt-get update && \

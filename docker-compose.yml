@@ -8,10 +8,15 @@ services:
     restart: always
     device_cgroup_rules:
       - 'c 189:* rwm'
+    privileged: true
     environment:
-      - VERBOSE=true
+      - VERBOSE=false
     tmpfs:
-      - /tmp
+      - /run:exec,size=32M
+      - /tmp:size=32M
+      - /var/log:size=32M
+    ports:
+       - 2947:2947
     volumes:
       - "/etc/localtime:/etc/localtime:ro"
       - "/etc/timezone:/etc/timezone:ro"
