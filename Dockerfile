@@ -1,8 +1,15 @@
-FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base
+FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base as gpsd-build
+RUN set -x && \
+    # install packages
+    KEPT_PACKAGES=() && \
+    KEPT_PACKAGES+=(gpsd) && \
+    KEPT_PACKAGES+=(gpsd-clients) && \
+    apt-get update && \
+    apt-get install -q -o Dpkg::Options::="--force-confnew" -y --no-install-recommends  --no-install-suggests \
+        "${KEPT_PACKAGES[@]}"
 
-LABEL org.opencontainers.image.source = "https://github.com/sdr-enthusiasts/docker-direwolf"
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base 
+LABEL org.opencontainers.image.source="https://github.com/sdr-enthusiasts/docker-aprs-tracker"
 
 # start options presets for GPSD:
 ENV START_DAEMON="false"
@@ -62,3 +69,5 @@ rm -rf /tmp/*
 
 # Add healthcheck
 # HEALTHCHECK --start-period=60s --interval=600s --timeout=60s CMD /healthcheck/healthcheck.sh
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
