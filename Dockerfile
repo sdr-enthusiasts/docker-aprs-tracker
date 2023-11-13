@@ -79,6 +79,7 @@ RUN set -x && \
 
 COPY --from=gpsd-build /usr/sbin/gpsd /usr/sbin/gpsd
 COPY --from=chrony-build /usr/sbin/chronyd /usr/sbin/chronyd
+COPY --from=chrony-build /etc/chrony/chrony.keys /etc/chrony/chrony.keys
 COPY --from=container-version /.CONTAINER_VERSION /.CONTAINER_VERSION
 COPY rootfs/ /
 
