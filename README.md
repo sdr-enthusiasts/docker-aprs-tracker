@@ -1,8 +1,8 @@
-# sdr-enthusiasts/docker-direwolf
+# sdr-enthusiasts/docker-aprs-tracker
 
 Table of Contents
 
-- [sdr-enthusiasts/docker-direwolf](#sdr-enthusiastsdocker-direwolf)
+- [sdr-enthusiasts/docker-aprs-tracker](#sdr-enthusiastsdocker-aprs-tracker)
   - [Introduction](#introduction)
   - [Prerequisites](#prerequisites)
   - [Multi Architecture Support](#multi-architecture-support)
@@ -18,12 +18,13 @@ Table of Contents
 
 ## Introduction
 
-
-
 NOTE - DO NOT USE - NOT YET READY FOR PRIMETIME / DEPLOYMENT. CHECK LATER IF THIS MESSAGE IS REMOVED
 
-Docker container of [WB2OSZ's excellent APRS software TNC "DireWolf"](https://github.com/wb2osz/direwolf/).
-Builds and runs on `arm64`, `armv7/armhf`, and `amd64/x86`.
+Docker container for a mobile / stand-alone APRS tracker. Contains:
+
+- [WB2OSZ's excellent APRS software TNC "DireWolf"](https://github.com/wb2osz/direwolf/)
+- GPSD for receiving location information from a GPS dongle and for maintaining the device time
+- Chrony for setting the device time
 
 ## Prerequisites
 

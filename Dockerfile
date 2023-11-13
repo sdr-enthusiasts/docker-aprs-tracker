@@ -54,6 +54,8 @@ RUN set -x && \
     # set CONTAINER_VERSION:
     rm -rf /src/* /tmp/* /var/lib/apt/lists/*
 
+COPY --from=gpsd-build /usr/sbin/gpsd /usr/sbin/gpsd
+
 COPY rootfs/ /
 
 # Add Container Version
