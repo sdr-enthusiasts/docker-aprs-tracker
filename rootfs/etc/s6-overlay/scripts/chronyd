@@ -26,6 +26,8 @@ s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
 "${s6wrap[@]}" echo "Started as an s6 run script"
 
+mkdir -p /run/chrony
+
 CHRONY_BIN="/usr/sbin/chronyd"
 
 CHRONY_ARGS=("-d")
@@ -39,7 +41,10 @@ done
 # Wait until GPSD is established
 sleep 10
 
-"${s6wrap[@]}" $CHRONY_BIN ${CHRONY_ARGS[@]}
+"${s6wrap[@]}" echo "Starting: $CHRONY_BIN ${CHRONY_ARGS[@]}"
+"${s6wrap[@]}" $CHRONY_BIN ${CHRONY_ARGS[@]} \
+    | grep -v "Cannot assign requested address" \
+    | grep -v "unable to connect to the DBUS system bus"
 
 "${s6wrap[@]}" echo "Exited, restarting in 10 secs"
 sleep 10
