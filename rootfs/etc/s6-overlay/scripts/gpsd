@@ -34,6 +34,7 @@ if chk_enabled "$VERBOSE"; then VERBOSE="1"; fi
 if [[ -n "$VERBOSE" ]]; then GPSD_ARGS+=(--debug "$VERBOSE"); fi
 if [[ -n "$GPSD_SOCKET" ]]; then GPSD_ARGS+=(--sockfile "$GPSD_SOCKET"); fi
 if [[ -n "$GPSD_OPTIONS" ]]; then GPSD_ARGS+=("$GPSD_OPTIONS"); fi
+GPSD_ARGS+=("${DEVICES}")
 
 "${s6wrap[@]}" $GPSD_BIN ${GPSD_ARGS[@]}
 

@@ -26,6 +26,8 @@ RUN set -x && \
     KEPT_PACKAGES+=(git) && \
     KEPT_PACKAGES+=(nano) && \
     KEPT_PACKAGES+=(curl) && \
+    # minimum config needed for GPSD:
+    KEPT_PACKAGES+=(libbluetooth3) && \
     # packages for direwolf
     KEPT_PACKAGES+=(direwolf) && \
     #
@@ -57,11 +59,13 @@ RUN set -x && \
 pushd /tmp && \
     branch="##BRANCH##" && \
     [[ "${branch:0:1}" == "#" ]] && branch="main" || true && \
-    git clone --depth=1 -b $branch https://github.com/sdr-enthusiasts/docker-direwolf.git && \
+    git clone --depth=1 -b $branch https://github.com/sdr-enthusiasts/docker-aprs-tracker.git && \
     cd docker-direwolf && \
     echo "$(TZ=UTC date +%Y%m%d-%H%M%S)_$(git rev-parse --short HEAD)_$(git branch --show-current)" > /.CONTAINER_VERSION && \
 popd && \
 rm -rf /tmp/*
+
+EXPOSE 2947
 
 # Add healthcheck
 # HEALTHCHECK --start-period=60s --interval=600s --timeout=60s CMD /healthcheck/healthcheck.sh
