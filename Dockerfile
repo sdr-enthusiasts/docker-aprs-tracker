@@ -79,8 +79,8 @@ RUN set -x && \
 
 COPY --from=gpsd-build /usr/sbin/gpsd /usr/sbin/gpsd
 COPY --from=chrony-build /usr/sbin/chronyd /usr/sbin/chronyd
-COPY rootfs/ /
 COPY --from=container-version /.CONTAINER_VERSION /.CONTAINER_VERSION
+COPY rootfs/ /
 
 EXPOSE 2947
 
