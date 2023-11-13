@@ -32,7 +32,7 @@ CHRONY_ARGS=("-d")
 CHRONY_ARGS+=("-F 1")
 
 # Wait until GPSD is running:
-while ! pgrep chronyd >/dev/null 2>&1; do
+while ! pgrep gpsd >/dev/null 2>&1; do
     sleep 1
 done
 
