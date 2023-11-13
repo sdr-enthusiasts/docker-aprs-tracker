@@ -1,13 +1,13 @@
-#!/usr/bin/with-contenv bash
+#!/command/with-contenv bash
 # shellcheck shell=bash
 
-# Check to make sure the correct parameters are defined.
+# Chronyd runtime. Sets the time of the system
 #---------------------------------------------------------------------------------------------
-# Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
+# Copyright (C) 2023, Ramon F. Kolb (kx1t)
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
-# Free Software Foundation, either version 3 of the License, or (at your option)
+# Free Software Foundation, either version 2 of the License, or (at your option)
 # any later version.
 #
 # This program is distributed in the hope that it will be useful, but
@@ -18,16 +18,28 @@
 # If not, see <https://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------------------------
 
+#!/command/with-contenv bash
+# shellcheck shell=bash disable=SC1091,SC2015,SC2164,SC2068,SC2145
 
-APPNAME="$(hostname)/40-check-ais-notify"
-echo "[$(date)][$APPNAME] Started as an s6 init script"
+source /scripts/common
+s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
-AIS_URL="${AIS_URL,,}"
-if [[ "${AIS_URL:0:4}" != "http" ]]
-then
-    [[ -z "$AIS_URL" ]] && echo -n "WARNING: AIS_URL is empty; " || echo -n "WARNING: AIS_URL is set to \":$AIS_URL\"; "
-    echo "expecting a URL starting with \"http://\" or \"https://\"."
-    echo "[$(date)][$APPNAME]         Please correct and restart the container."
-    echo "[$(date)][$APPNAME] Container execution is HALTED."
-    sleep infinity
-fi
+"${s6wrap[@]}" echo "Started as an s6 run script"
+
+CHRONY_BIN="/usr/sbin/chronyd"
+
+CHRONY_ARGS=("-d")
+CHRONY_ARGS+=("-F 1")
+
+# Wait until GPSD is running:
+while ! pgrep chronyd >/dev/null 2>&1; do
+    sleep 1
+done
+
+# Wait until GPSD is established
+sleep 10
+
+"${s6wrap[@]}" $CHRONY_BIN ${CHRONY_ARGS[@]}
+
+"${s6wrap[@]}" echo "Exited, restarting in 10 secs"
+sleep 10

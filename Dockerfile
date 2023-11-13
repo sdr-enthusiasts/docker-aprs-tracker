@@ -7,6 +7,30 @@ RUN set -x && \
     apt-get install -q -o Dpkg::Options::="--force-confnew" -y --no-install-recommends  --no-install-suggests \
         "${KEPT_PACKAGES[@]}"
 
+FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base as chrony-build
+RUN set -x && \
+    # install packages
+    KEPT_PACKAGES=() && \
+    KEPT_PACKAGES+=(chrony) && \
+    apt-get update && \
+    apt-get install -q -o Dpkg::Options::="--force-confnew" -y --no-install-recommends  --no-install-suggests \
+        "${KEPT_PACKAGES[@]}"
+
+# Add Container Version
+FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base as container-version
+RUN set -x && \
+    KEPT_PACKAGES=() && \
+    KEPT_PACKAGES+=(git) && \
+    apt-get update && \
+    apt-get install -q -o Dpkg::Options::="--force-confnew" -y --no-install-recommends  --no-install-suggests \
+        "${KEPT_PACKAGES[@]}" && \
+    #
+    branch="##BRANCH##" && \
+    [[ "${branch:0:1}" == "#" ]] && branch="main" || true && \
+    git clone --depth=1 -b $branch https://github.com/sdr-enthusiasts/docker-aprs-tracker.git && \
+    cd docker-aprs-tracker && \
+    echo "$(TZ=UTC date +%Y%m%d-%H%M%S)_$(git rev-parse --short HEAD)_$(git branch --show-current)" > /.CONTAINER_VERSION
+
 FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base 
 LABEL org.opencontainers.image.source="https://github.com/sdr-enthusiasts/docker-aprs-tracker"
 
@@ -28,6 +52,9 @@ RUN set -x && \
     KEPT_PACKAGES+=(curl) && \
     # minimum config needed for GPSD:
     KEPT_PACKAGES+=(libbluetooth3) && \
+    # minumum config needed for chrony:
+    KEPT_PACKAGES+=(iproute2) && \
+    KEPT_PACKAGES+=(ucf) && \
     # packages for direwolf
     KEPT_PACKAGES+=(direwolf) && \
     #
@@ -51,19 +78,9 @@ RUN set -x && \
     rm -rf /src/* /tmp/* /var/lib/apt/lists/*
 
 COPY --from=gpsd-build /usr/sbin/gpsd /usr/sbin/gpsd
-
+COPY --from=chrony-build /usr/sbin/chronyd /usr/sbin/chronyd
 COPY rootfs/ /
-
-# Add Container Version
-RUN set -x && \
-pushd /tmp && \
-    branch="##BRANCH##" && \
-    [[ "${branch:0:1}" == "#" ]] && branch="main" || true && \
-    git clone --depth=1 -b $branch https://github.com/sdr-enthusiasts/docker-aprs-tracker.git && \
-    cd docker-aprs-tracker && \
-    echo "$(TZ=UTC date +%Y%m%d-%H%M%S)_$(git rev-parse --short HEAD)_$(git branch --show-current)" > /.CONTAINER_VERSION && \
-popd && \
-rm -rf /tmp/*
+COPY --from=container-version /.CONTAINER_VERSION /.CONTAINER_VERSION
 
 EXPOSE 2947
 
