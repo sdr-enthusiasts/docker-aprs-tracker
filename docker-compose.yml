@@ -1,7 +1,8 @@
 version: '3.8'
 services:
   aprs:
-    image: ghcr.io/sdr-enthusiasts/docker-aprs-tracker
+    #image: ghcr.io/sdr-enthusiasts/docker-aprs-tracker
+    build: https://github.com/sdr-enthusiasts/docker-aprs-tracker.git
     container_name: aprs
     hostname: aprs
     restart: always

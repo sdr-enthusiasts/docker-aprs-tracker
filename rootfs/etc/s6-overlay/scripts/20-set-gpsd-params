@@ -29,8 +29,8 @@ s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 # Note - these variables have been preset with a value in Dockerfile
 # but can be overwritten by docker environment variables
 
-sed -i "s/START_DAEMON=.*/START_DAEMON=\"$START_DAEMON\"/g" /etc/default/gpsd
-sed -i "s/GPSD_OPTIONS=.*/GPSD_OPTIONS=\"$GPSD_OPTIONS\"/g" /etc/default/gpsd
-sed -i "s/DEVICES=.*/DEVICES=\"$DEVICES\"/g" /etc/default/gpsd
-sed -i "s/USBAUTO=.*/USBAUTO=\"$USBAUTO\"/g" /etc/default/gpsd
-sed -i "s/GPSD_SOCKET=.*/GPSD_SOCKET=\"$GPSD_SOCKET\"/g" /etc/default/gpsd
+sed -i "s|START_DAEMON=.*|START_DAEMON=\"$START_DAEMON\"|g" /etc/default/gpsd
+sed -i "s|GPSD_OPTIONS=.*|GPSD_OPTIONS=\"$GPSD_OPTIONS\"|g" /etc/default/gpsd
+sed -i "s|DEVICES=.*|DEVICES=\"$DEVICES\"|g" /etc/default/gpsd
+sed -i "s|USBAUTO=.*|USBAUTO=\"$USBAUTO\"|g" /etc/default/gpsd
+sed -i "s|GPSD_SOCKET=.*|GPSD_SOCKET=\"$GPSD_SOCKET\"|g" /etc/default/gpsd
