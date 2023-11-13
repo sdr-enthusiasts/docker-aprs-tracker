@@ -24,8 +24,6 @@
 source /scripts/common
 s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
-"${s6wrap[@]}" echo "Started as an s6 run script"
-
 GPSD_BIN="/sbin/gpsd"
 
 GPSD_ARGS=(--nowait)
@@ -36,7 +34,11 @@ if [[ -n "$GPSD_SOCKET" ]]; then GPSD_ARGS+=(--sockfile "$GPSD_SOCKET"); fi
 if [[ -n "$GPSD_OPTIONS" ]]; then GPSD_ARGS+=("$GPSD_OPTIONS"); fi
 GPSD_ARGS+=("${DEVICES}")
 
-"${s6wrap[@]}" $GPSD_BIN ${GPSD_ARGS[@]}
+"${s6wrap[@]}" echo "Starting: $GPSD_BIN ${GPSD_ARGS[@]}"
+"${s6wrap[@]}" $GPSD_BIN ${GPSD_ARGS[@]} \
+    | grep -v "Cannot assign requested address" \
+    | grep -v "unable to connect to the DBUS system bus"
+
 
 "${s6wrap[@]}" echo "Exited, restarting in 10 secs"
 sleep 10
