@@ -3,7 +3,6 @@ RUN set -x && \
     # install packages
     KEPT_PACKAGES=() && \
     KEPT_PACKAGES+=(gpsd) && \
-    KEPT_PACKAGES+=(gpsd-clients) && \
     apt-get update && \
     apt-get install -q -o Dpkg::Options::="--force-confnew" -y --no-install-recommends  --no-install-suggests \
         "${KEPT_PACKAGES[@]}"
@@ -27,11 +26,6 @@ RUN set -x && \
     KEPT_PACKAGES+=(git) && \
     KEPT_PACKAGES+=(nano) && \
     KEPT_PACKAGES+=(curl) && \
-    # packages for GPSD
-    KEPT_PACKAGES+=(gpsd) && \
-    KEPT_PACKAGES+=(gpsd-clients) && \
-    #KEPT_PACKAGES+=(libgps-dev) && \
-    #KEPT_PACKAGES+=(libgps28) && \
     # packages for direwolf
     KEPT_PACKAGES+=(direwolf) && \
     #
