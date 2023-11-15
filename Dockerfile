@@ -35,11 +35,11 @@ FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base
 LABEL org.opencontainers.image.source="https://github.com/sdr-enthusiasts/docker-aprs-tracker"
 
 # start options presets for GPSD:
-ENV START_DAEMON="false"
+ENV GPSD_START_DAEMON="false"
 ENV GPSD_OPTIONS="-n"
-ENV DEVICES="/dev/ttyACM0"
-ENV USBAUTO="true"
-ENV GPSD_SOCKET="/var/run/gpsd.sock"
+ENV GPSD_DEVICES="/dev/ttyACM0"
+ENV GPSD_USBAUTO="true"
+ENV GPSD_SOCKET="/run/gpsd/gpsd.sock"
 
 RUN set -x && \
     # generic packages
