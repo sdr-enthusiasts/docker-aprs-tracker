@@ -11,6 +11,7 @@ services:
     privileged: true
     environment:
       - VERBOSE=false
+      - MYCALL=KX1T-1
     tmpfs:
       - /run:exec,size=32M
       - /tmp:size=32M

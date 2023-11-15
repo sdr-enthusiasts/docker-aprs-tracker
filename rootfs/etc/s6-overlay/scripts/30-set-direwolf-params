@@ -1,0 +1,244 @@
+#!/command/with-contenv bash
+# shellcheck shell=bash
+
+# Check to make sure the correct Direwolf parameters are defined and that the soundcard is initialized correctly.
+#---------------------------------------------------------------------------------------------
+# Copyright (C) 2023, Ramon F. Kolb (kx1t)
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 2 of the License, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------
+
+#!/command/with-contenv bash
+# shellcheck shell=bash disable=SC1091,SC2015,SC2164,SC2068,SC2145
+
+source /scripts/common
+s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
+
+"${s6wrap[@]}" echo "Started as an s6 init script"
+
+DWCONFIGFILE="${DWCONFIGFILE:-/run/direwolf/direwolf.conf}"
+
+mkdir -p "$(dirname "$DWCONFIGFILE")"
+cp -u /etc/direwolf/direwolf.conf "$DWCONFIGFILE"
+
+function setdwconfig() {
+# function to set direwolf config item
+# usage: setdwconfig PARAM VALUE STRING
+# If VALUE STRING is not present, it will simply uncomment PARAM if it exists, or add it (without values) to the end of the config file
+# If VALUE STRING is specified as "VALUE" "STRING", "VALUE STRING", or "", it will uncomment and set value to PARAM VALUE STRING, or add PARAM VALUE STRING to the end of the config file
+# If value string == "remove" (lowercase letters), then comment PARAM if it exists
+#
+# Examples:
+# setdwconfig PTT ON
+#    # PTT CM108 --> PTT ON
+# setdwconfig PTT
+#    # PTT CM108 --> PTT CM108
+# setdwconfig PTT remove
+#    PTT CM108 --> # PTT CM108
+# setdwconfig PTT ""
+#    # PTT CM108 --> PTT
+
+    local param="${1^^}"
+    local value="${*:2}"
+
+    if [[ -z "$param" ]]; then
+        # No arguments given to function: skip
+        "${s6wrap[@]}" echo "[setdwconfig] error - no arguments. Usage: setdwconfig PARAMETER VALUE STRING"
+        return 1
+
+    elif [[ -z "${2+x}" ]]; then
+        # $param is present but there's no value: uncomment if exists or add $param to the file if it doesn't exist
+        if grep -qo "^\s*#*\s*${param}\b.*$" "$DWCONFIGFILE"; then
+            sed -i "s/^\s*#*\s*\(${param}\b.*\)$/\1/g" "$DWCONFIGFILE"
+        else
+            echo "$param" >> "$DWCONFIGFILE"
+        fi
+    
+    elif [[ "$2" == "remove" ]]; then
+        # comment out $param if it exists; do nothing if if doesn't exist
+        sed -i "s/^\s*#*\s*\(${param}\b.*\)$/# \1/g" "$DWCONFIGFILE"
+    
+    else
+        # $value has an (empty or non-empty) value:
+        # if $param exists in file, uncomment if needed and replace the existing value with the new value;
+        # if $param doesn't exist, add $param and $value to the end of the file  
+        if grep -qo "^\s*#*\s*${param}\b.*$" "$DWCONFIGFILE"; then
+            sed -i "s/^\s*#*\s*${param}\b.*$/${param} ${value}/g" "$DWCONFIGFILE"
+        else
+            {   echo -n "${param}"
+                if [[ -n "${value}" ]]; then
+                    echo " ${value}"
+                else
+                    echo ""
+                fi
+            } >> "$DWCONFIGFILE"
+        fi
+    fi    
+}
+
+# This section is adapted from https://github.com/kx1t/docker-noisecapt/blob/main/rootfs/etc/services.d/noisecapt/run
+
+if [[ -z "$AUDIOCARD" ]]; then
+    AUDIOCARD="$(arecord --list-devices | sed  -n 's/.*card \([0-9][0-9]*\).*/\1/p')"
+    if [[ -z "$AUDIOCARD" ]]; then
+        "${s6wrap[@]}" echo "[ERROR] - cannot determine the audio card."
+        "${s6wrap[@]}" echo "This is what we see:"
+        "${s6wrap[@]}" arecord --list-devices
+        "${s6wrap[@]}" echo "Fix this, or set variable AUDIOCARD to the desired audio card number."
+        "${s6wrap[@]}" echo "We are stopping the execution of the container now."
+        sleep infinity & wait $!
+    else
+        "${s6wrap[@]}" echo "System determined that we are using audio card #$AUDIOCARD"
+    fi
+else
+    "${s6wrap[@]}" echo "Using AUDIOCARD env variable for audio card #$AUDIOCARD"
+fi
+
+if [[ -z "$SUBDEVICE" ]]; then   
+    SUBDEVICE="$(arecord --list-devices | sed -n 's/^\s*Subdevice #\([0-9]\+\):.*$/\1/p')"
+     if [[ -z "$SUBDEVICE" ]]; then
+        "${s6wrap[@]}" echo "[WARNING] - cannot determine the subdevice for Audio Card $AUDIOCARD."
+        "${s6wrap[@]}" echo "This is what we see:"
+        "${s6wrap[@]}" arecord --list-devices
+        "${s6wrap[@]}" echo "We will assume it's Subdevice #0. If this is incorrect, set variable SUBDEVICE to the desired subdevice number."
+        SUBDEVICE=0
+    else
+        "${s6wrap[@]}" echo "System determined that we are using subdevice #$SUBDEVICE"
+    fi   
+else
+    "${s6wrap[@]}" echo "Using SUBDEVICE env variable for subdevice #$SUBDEVICE"
+fi
+
+# Figure out which NumID the mute button is unmute (which means set Mic Capture Switch = on):
+"${s6wrap[@]}" echo "Ensuring the microphone is unmuted on Audio Card $AUDIOCARD"
+"${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Mic Capture Switch' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" on
+#
+# Unmuting the audio output
+"${s6wrap[@]}" echo "Ensuring the speaker is unmuted on Audio Card $AUDIOCARD"
+"${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Speaker Playback Switch' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" on
+#
+# Get the NumID and max value for the audio input level and max it out
+"${s6wrap[@]}" echo "Set microphone volume to max on Audio Card $AUDIOCARD"
+"${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Mic Capture Volume' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" "$(amixer --card "$AUDIOCARD" contents|grep -A1 'Mic Capture Volume' | sed  -n 's/.*max=\([0-9][0-9]*\).*/\1/p')"
+#
+# Switch mic the AGC off as this will mess with the audio levels
+"${s6wrap[@]}" echo "Switch off microphone ACG on Audio Card $AUDIOCARD"
+"${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Auto Gain Control' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" off
+#
+# Set output audio level to $AUDIOLEVEL or halfway the scale if it's not defined
+audio_min="$(amixer --card "$AUDIOCARD" contents|grep -A1 'Speaker Playback Volume' | sed -n 's/^.*,min=\([0-9]\+\).*$/\1/p')"
+audio_min="${audio_min:-0}"
+audio_max="$(amixer --card "$AUDIOCARD" contents|grep -A1 'Speaker Playback Volume' | sed -n 's/^.*,max=\([0-9]\+\).*$/\1/p')"
+audio_max="${audio_max:-150}"
+if [[ -n "$AUDIOLEVEL" ]]; then
+    LEVEL="$(bc -l <<< "scale=0; ($audio_max - $audio_min) * $AUDIOLEVEL / 100")"
+else
+    LEVEL="$(( (audio_max - audio_min) / 2 ))"
+fi
+"${s6wrap[@]}" echo "Setting audio output volume to $LEVEL ($AUDIOLEVEL % of max $audio_max) on Audio Card $AUDIOCARD"
+"${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Speaker Playback Volume' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" "$LEVEL"
+
+# ------------------------------------------------------------------------------------------------------------
+# Now we will set the relevant DireWolf parameters
+
+setdwconfig ADEVICE "plughw:$AUDIOCARD,$SUBDEVICE"
+
+if [[ -n "$MYCALL" ]] && grep -qo "^[A-Z0-9]\+[-]\{0,1\}[0-9]\{0,2\}$" <<< "${MYCALL^^}"; then
+    # just make sure that MYCALL doesn't simply end in a dash:
+    if [[ "${MYCALL: -1}" == "-" ]]; then MYCALL="${MYCALL:0:-1}"; fi
+    setdwconfig MYCALL "${MYCALL^^}"
+else
+    "${s6wrap[@]}" echo "[FATAL] You must set your callsign in the MYCALL env variable!"
+    "${s6wrap[@]}" echo "[FATAL] Currently, MYCALL is set to $([[ -n "$MYCALL" ]] && echo "${MYCALL^^}, which is an invalid callsign! Only use A-Z, 0-9 in your callsign, and any suffix must begin with \"-\" followed by 1 or 2 digits, for example 0A0AA-10." || echo "empty.")"
+    "${s6wrap[@]}" echo "[FATAL] Terminating container execution. Fix this and try again."
+    exit 1
+fi
+if [[ -n "$PTT" ]]; then
+    setdwconfig PTT "$PTT"
+fi
+
+if [[ -n "$SYMBOL" ]]; then
+    # This is dangerous - tell user to strongly prefer using the (partial) symbol description rather than the 2-char symbol value
+    # There are many ways that the use of certain characters in the symbols will break the sed.
+    # So -- strongly prefer using SYMBOL="normal car" over SYMBOL=\> (which should probably be escaped as SYMBOL=\\> for it to work)
+    if grep -qo "^\s*#*\s*TBEACON.*SYMBOL=.*$" "$DWCONFIGFILE"; then 
+        sed -i "s/^\s*#*\s*\(TBEACON.*SYMBOL=\).\+\(\b.*\)$/\1$SYMBOL\2/g" "$DWCONFIGFILE"
+    else
+        sed -i "s/^\s*#*\s*\(TBEACON.*\)$/\1 SYMBOL=$SYMBOL/g" "$DWCONFIGFILE"
+    fi
+fi
+
+if [[ -n "$OVERLAY" ]]; then
+    if (( ${#OVERLAY} != 1 )) || grep -qo "[^A-Za-z0-9]\+" <<< "$OVERLAY"; then
+        "${s6wrap[@]}" echo "[WARNING] Ignoring OVERLAY. It must be a single letter or digit. You specified: OVERLAY=$OVERLAY"
+    else
+        if grep -qo "^\s*#*\s*TBEACON.*OVERLAY=.*$" "$DWCONFIGFILE"; then 
+            sed -i "s/^\s*#*\s*\(TBEACON.*OVERLAY=\).\+\(\b.*\)$/\1$OVERLAY\2/g" "$DWCONFIGFILE"
+        else
+            sed -i "s/^\s*#*\s*\(TBEACON.*\)$/\1 OVERLAY=$OVERLAY/g" "$DWCONFIGFILE"
+        fi
+    fi
+fi
+
+if [[ -n "$VIA" ]]; then
+    if grep -qo "[^A-Z0-9,-]\+" <<< "${VIA^^}"; then
+        "${s6wrap[@]}" echo "[WARNING] Ignoring VIA. It must contain only A-Z, 0-9, \",\", and \"-\", for example \"WIDE1-1,WIDE2-1\". You specified: VIA=${VIA^^}"
+    else
+        if grep -qo "^\s*#*\s*TBEACON.*VIA=.*$" "$DWCONFIGFILE"; then 
+            sed -i "s/^\s*#*\s*\(TBEACON.*VIA=\).\+\(\b.*\)$/\1${VIA^^}\2/g" "$DWCONFIGFILE"
+        else
+            sed -i "s/^\s*#*\s*\(TBEACON.*\)$/\1 VIA=${VIA^^}/g" "$DWCONFIGFILE"
+        fi
+    fi
+fi
+
+if [[ -n "$SMARTBEACONING" ]]; then
+    setdwconfig SMARTBEACONING "$SMARTBEACONING"
+fi
+
+# DW_EXTRA_CONFIGS has this syntax:
+# DW_EXTRA_CONFIGS=
+#       PARAM1=value string;
+#       PARAM2=;
+#       PARAM3;
+#       PARAM4=remove
+#
+# In this case, PARAM1 is uncommented (if needed) and set with the value string (replacing any existing values)
+#               PARAM2 is uncommented (if needed) and set with no value string (any existing values are removed)
+#               PARAM3 is uncommented (if needed) and leaving any existing value string in place
+#               PARAM4 is commented out
+# Note that any quotes in the parameter or value string will be literally placed into the configuration file.
+if [[ -n "$DW_EXTRA_CONFIGS" ]]; then
+    # strip any newlines    
+    DW_EXTRA_CONFIGS="${DW_EXTRA_CONFIGS//$'\n'/}"
+    # Strip any extraneous spaces:
+    DW_EXTRA_CONFIGS="${DW_EXTRA_CONFIGS#"${DW_EXTRA_CONFIGS%%[![:space:]]*}"}"   # strip leading space
+    DW_EXTRA_CONFIGS="${DW_EXTRA_CONFIGS//; /;}"  # strip any trailing space after each ;
+    readarray -td ";" configs < <(printf '%s' "${DW_EXTRA_CONFIGS}")
+    # Now loop through each of the elements:
+    for instance in "${configs[@]}"
+    do
+        instance="${instance^^}"
+        param="${instance%%=*}" # all before the first "="
+        value="${instance#*=}"  # all after the first "="
+        if [[ -z "${instance}" ]]; then
+            # Instance empty: skip
+            continue
+        elif ! grep -qo "=" <<< "$instance"; then
+            # If there's no "=", don't pass in a parameter
+            setdwconfig "${param}"
+        else
+            setdwconfig "${param}" "${value}"
+        fi
+    done
+fi

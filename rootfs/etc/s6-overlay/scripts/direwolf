@@ -1,7 +1,7 @@
 #!/command/with-contenv bash
 # shellcheck shell=bash
 
-# Chronyd runtime. Sets the time of the system
+# Direwolf runtime. Starts Direwolf
 #---------------------------------------------------------------------------------------------
 # Copyright (C) 2023, Ramon F. Kolb (kx1t)
 #
@@ -24,14 +24,13 @@
 source /scripts/common
 s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
-# make sure the chrony run directory exists and has the correct permissions:
-mkdir -p /run/chrony
-chmod 0750 /run/chrony
 
-CHRONY_BIN="/usr/sbin/chronyd"
+DW_BIN="/usr/bin/direwolf"
 
-CHRONY_ARGS=("-d")
-CHRONY_ARGS+=("-F 1")
+DW_ARGS=("-c ${DWCONFIGFILE:-/run/direwolf/direwolf.conf}")
+if chk_enabled "$VERBOSE"; then DW_ARG+=("-d gt"); fi
+if [[ -n "$DW_DEBUG" ]]; then DW_ARG+=("-d $DW_DEBUG"); fi
+if [[ -n "$DW_EXTRA_CMDLINEARGS" ]]; then DW_ARGS+=("$DW_EXTRA_CMDLINEARGS"); fi
 
 # Wait until GPSD is running:
 while ! pgrep gpsd >/dev/null 2>&1; do
@@ -41,9 +40,9 @@ done
 # Wait until GPSD is established
 sleep 10
 
-"${s6wrap[@]}" echo "Starting: $CHRONY_BIN ${CHRONY_ARGS[@]}"
+"${s6wrap[@]}" "Starting: $DW_BIN ${DW_ARGS[@]}"
 #shellcheck disable=SC2048,SC2086
-"${s6wrap[@]}" $CHRONY_BIN ${CHRONY_ARGS[*]}
+"${s6wrap[@]}" $DW_BIN ${DW_ARGS[*]}
 
 "${s6wrap[@]}" echo "Exited, restarting in 10 secs"
 sleep 10
