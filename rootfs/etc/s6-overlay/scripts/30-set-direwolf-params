@@ -153,6 +153,7 @@ setdwconfig ADEVICE "plughw:$AUDIOCARD,$SUBDEVICE"
 if [[ -n "$MYCALL" ]] && grep -qo "^[A-Z0-9]\+[-]\{0,1\}[0-9]\{0,2\}$" <<< "${MYCALL^^}"; then
     # just make sure that MYCALL doesn't simply end in a dash:
     if [[ "${MYCALL: -1}" == "-" ]]; then MYCALL="${MYCALL:0:-1}"; fi
+    "${s6wrap[@]}" echo "[INFO] Setting MYCALL $MYCALL"
     setdwconfig MYCALL "${MYCALL^^}"
 else
     "${s6wrap[@]}" echo "[FATAL] You must set your callsign in the MYCALL env variable!"
@@ -161,6 +162,7 @@ else
     sleep infinity & wait $!
 fi
 if [[ -n "$PTT" ]]; then
+    "${s6wrap[@]}" echo "[INFO] Setting PTT $PTT"
     setdwconfig PTT "$PTT"
 fi
 
@@ -173,6 +175,7 @@ if [[ -n "$SYMBOL" ]]; then
     else
         sed -i "s/^\s*#*\s*\(TBEACON.*\)$/\1 SYMBOL=$SYMBOL/g" "$DWCONFIGFILE"
     fi
+    "${s6wrap[@]}" echo "[INFO] Setting SYMBOL: $(grep -o "^\s*#*\s*TBEACON.*$" "$DWCONFIGFILE")"
 fi
 
 if [[ -n "$OVERLAY" ]]; then
@@ -185,6 +188,7 @@ if [[ -n "$OVERLAY" ]]; then
             sed -i "s/^\s*#*\s*\(TBEACON.*\)$/\1 OVERLAY=$OVERLAY/g" "$DWCONFIGFILE"
         fi
     fi
+    "${s6wrap[@]}" echo "[INFO] Setting OVERLAY: $(grep -o "^\s*#*\s*TBEACON.*$" "$DWCONFIGFILE")"
 fi
 
 if [[ -n "$VIA" ]]; then
@@ -197,10 +201,12 @@ if [[ -n "$VIA" ]]; then
             sed -i "s/^\s*#*\s*\(TBEACON.*\)$/\1 VIA=${VIA^^}/g" "$DWCONFIGFILE"
         fi
     fi
+    "${s6wrap[@]}" echo "[INFO] Setting VIA: $(grep -o "^\s*#*\s*TBEACON.*$" "$DWCONFIGFILE")"
 fi
 
 if [[ -n "$SMARTBEACONING" ]]; then
     setdwconfig SMARTBEACONING "$SMARTBEACONING"
+    "${s6wrap[@]}" echo "[INFO] Setting SMARTBEACONING $SMARTBEACONING"
 fi
 
 # DW_EXTRA_CONFIGS has this syntax:
@@ -237,5 +243,6 @@ if [[ -n "$DW_EXTRA_CONFIGS" ]]; then
         else
             setdwconfig "${param}" "${value}"
         fi
+        "${s6wrap[@]}" echo "[INFO] Setting ${param} ${value}"
     done
 fi
