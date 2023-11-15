@@ -27,7 +27,7 @@ s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 GPSD_BIN="/sbin/gpsd"
 
 GPSD_ARGS=(--nowait)
-if chk_disabled "$START_DAEMON"; then GPSD_ARGS+=(--foreground); fi
+if chk_disabled "$GPSD_START_DAEMON"; then GPSD_ARGS+=(--foreground); fi
 if chk_enabled "$VERBOSE"; then VERBOSE="1"; fi
 if [[ -n "$VERBOSE" ]]; then GPSD_ARGS+=(--debug "$VERBOSE"); fi
 if [[ -n "$GPSD_SOCKET" ]]; then GPSD_ARGS+=(--sockfile "$GPSD_SOCKET"); fi
@@ -35,6 +35,7 @@ if [[ -n "$GPSD_OPTIONS" ]]; then GPSD_ARGS+=("$GPSD_OPTIONS"); fi
 GPSD_ARGS+=("${GPSD_DEVICES}")
 
 "${s6wrap[@]}" echo "Starting: $GPSD_BIN ${GPSD_ARGS[@]}"
+#shellcheck disable=SC2048,SC2086
 "${s6wrap[@]}" $GPSD_BIN ${GPSD_ARGS[*]} \
     | grep -vi "Cannot assign requested address" \
     | grep -vi "unable to connect to the DBUS system bus" \
