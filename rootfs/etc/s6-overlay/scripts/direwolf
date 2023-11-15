@@ -28,8 +28,8 @@ s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 DW_BIN="/usr/bin/direwolf"
 
 DW_ARGS=("-c ${DWCONFIGFILE:-/run/direwolf/direwolf.conf}")
-if chk_enabled "$VERBOSE"; then DW_ARG+=("-d gt"); fi
-if [[ -n "$DW_DEBUG" ]]; then DW_ARG+=("-d $DW_DEBUG"); fi
+if chk_enabled "$VERBOSE"; then DW_ARGS+=("-d gt"); fi
+if [[ -n "$DW_DEBUG" ]]; then DW_ARGS+=("-d $DW_DEBUG"); fi
 if [[ -n "$DW_EXTRA_CMDLINEARGS" ]]; then DW_ARGS+=("$DW_EXTRA_CMDLINEARGS"); fi
 
 # Wait until GPSD is running:
