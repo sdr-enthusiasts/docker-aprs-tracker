@@ -37,7 +37,8 @@ GPSD_ARGS+=("${GPSD_DEVICES}")
 "${s6wrap[@]}" echo "Starting: $GPSD_BIN ${GPSD_ARGS[@]}"
 "${s6wrap[@]}" $GPSD_BIN ${GPSD_ARGS[*]} \
     | grep -v "Cannot assign requested address" \
-    | grep -v "unable to connect to the DBUS system bus"
+    | grep -v "unable to connect to the DBUS system bus" \
+    || true
 
 
 "${s6wrap[@]}" echo "Exited, restarting in 10 secs"
