@@ -142,7 +142,7 @@ audio_max="$(amixer --card "$AUDIOCARD" contents|grep -A1 'Speaker Playback Volu
 audio_max="${audio_max:-150}"
 AUDIOLEVEL="${AUDIOLEVEL:-50}"
 LEVEL="$(bc -l <<< "scale=0; ($audio_max - $audio_min) * $AUDIOLEVEL / 100")"
-"${s6wrap[@]}" echo "Setting audio output volume to $LEVEL ($LEVEL % of max $audio_max) on Audio Card $AUDIOCARD"
+"${s6wrap[@]}" echo "Setting audio output volume to $LEVEL ($AUDIOLEVEL % of max $audio_max) on Audio Card $AUDIOCARD"
 "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Speaker Playback Volume' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" "$LEVEL"
 
 # ------------------------------------------------------------------------------------------------------------
