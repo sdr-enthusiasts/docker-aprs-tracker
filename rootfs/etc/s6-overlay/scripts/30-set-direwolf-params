@@ -91,48 +91,48 @@ function setdwconfig() {
 if [[ -z "$AUDIOCARD" ]]; then
     AUDIOCARD="$(arecord --list-devices | sed  -n 's/.*card \([0-9][0-9]*\).*/\1/p')"
     if [[ -z "$AUDIOCARD" ]]; then
-        "${s6wrap[@]}" echo "[ERROR] - cannot determine the audio card."
-        "${s6wrap[@]}" echo "This is what we see:"
+        "${s6wrap[@]}" echo "[FATAL] Cannot determine the audio card."
+        "${s6wrap[@]}" echo "[FATAL] This is what we see:"
         "${s6wrap[@]}" arecord --list-devices
-        "${s6wrap[@]}" echo "Fix this, or set variable AUDIOCARD to the desired audio card number."
-        "${s6wrap[@]}" echo "We are stopping the execution of the container now."
+        "${s6wrap[@]}" echo "[FATAL] You MUST fix this, or set variable AUDIOCARD to the desired audio card number."
+        "${s6wrap[@]}" echo "[FATAL] We are stopping the execution of the container now."
         sleep infinity & wait $!
     else
-        "${s6wrap[@]}" echo "System determined that we are using audio card #$AUDIOCARD"
+        "${s6wrap[@]}" echo "[INFO] System determined that we are using audio card #$AUDIOCARD"
     fi
 else
-    "${s6wrap[@]}" echo "Using AUDIOCARD env variable for audio card #$AUDIOCARD"
+    "${s6wrap[@]}" echo "[INFO] Using AUDIOCARD env variable for audio card #$AUDIOCARD"
 fi
 
 if [[ -z "$SUBDEVICE" ]]; then   
     SUBDEVICE="$(arecord --list-devices | sed -n 's/^\s*Subdevice #\([0-9]\+\):.*$/\1/p')"
      if [[ -z "$SUBDEVICE" ]]; then
-        "${s6wrap[@]}" echo "[WARNING] - cannot determine the subdevice for Audio Card $AUDIOCARD."
-        "${s6wrap[@]}" echo "This is what we see:"
+        "${s6wrap[@]}" echo "[WARNING] Cannot determine the subdevice for Audio Card $AUDIOCARD."
+        "${s6wrap[@]}" echo "[WARNING] This is what we see:"
         "${s6wrap[@]}" arecord --list-devices
-        "${s6wrap[@]}" echo "We will assume it's Subdevice #0. If this is incorrect, set variable SUBDEVICE to the desired subdevice number."
+        "${s6wrap[@]}" echo "[WARNING] We will assume it's Subdevice #0. If this is incorrect, set variable SUBDEVICE to the desired subdevice number."
         SUBDEVICE=0
     else
-        "${s6wrap[@]}" echo "System determined that we are using subdevice #$SUBDEVICE"
+        "${s6wrap[@]}" echo "[INFO] System determined that we are using subdevice #$SUBDEVICE"
     fi   
 else
-    "${s6wrap[@]}" echo "Using SUBDEVICE env variable for subdevice #$SUBDEVICE"
+    "${s6wrap[@]}" echo "[INFO] Using SUBDEVICE env variable for subdevice #$SUBDEVICE"
 fi
 
 # Figure out which NumID the mute button is unmute (which means set Mic Capture Switch = on):
-"${s6wrap[@]}" echo "Ensuring the microphone is unmuted on Audio Card $AUDIOCARD"
+"${s6wrap[@]}" echo "[INFO] Ensuring the microphone is unmuted on Audio Card $AUDIOCARD"
 "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Mic Capture Switch' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" on
 #
 # Unmuting the audio output
-"${s6wrap[@]}" echo "Ensuring the speaker is unmuted on Audio Card $AUDIOCARD"
+"${s6wrap[@]}" echo "[INFO] Ensuring the speaker is unmuted on Audio Card $AUDIOCARD"
 "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Speaker Playback Switch' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" on
 #
 # Get the NumID and max value for the audio input level and max it out
-"${s6wrap[@]}" echo "Set microphone volume to max on Audio Card $AUDIOCARD"
+"${s6wrap[@]}" echo "[INFO] Set microphone volume to max on Audio Card $AUDIOCARD"
 "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Mic Capture Volume' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" "$(amixer --card "$AUDIOCARD" contents|grep -A1 'Mic Capture Volume' | sed  -n 's/.*max=\([0-9][0-9]*\).*/\1/p')"
 #
 # Switch mic the AGC off as this will mess with the audio levels
-"${s6wrap[@]}" echo "Switch off microphone ACG on Audio Card $AUDIOCARD"
+"${s6wrap[@]}" echo "[INFO] Switch off microphone ACG on Audio Card $AUDIOCARD"
 "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Auto Gain Control' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" off
 #
 # Set output audio level to $AUDIOLEVEL or halfway the scale if it's not defined
@@ -142,7 +142,7 @@ audio_max="$(amixer --card "$AUDIOCARD" contents|grep -A1 'Speaker Playback Volu
 audio_max="${audio_max:-150}"
 AUDIOLEVEL="${AUDIOLEVEL:-50}"
 LEVEL="$(bc -l <<< "scale=0; ($audio_max - $audio_min) * $AUDIOLEVEL / 100")"
-"${s6wrap[@]}" echo "Setting audio output volume to $LEVEL ($AUDIOLEVEL % of max $audio_max) on Audio Card $AUDIOCARD"
+"${s6wrap[@]}" echo "[INFO] Setting audio output volume to $LEVEL ($AUDIOLEVEL % of max $audio_max) on Audio Card $AUDIOCARD"
 "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Speaker Playback Volume' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" "$LEVEL"
 
 # ------------------------------------------------------------------------------------------------------------
