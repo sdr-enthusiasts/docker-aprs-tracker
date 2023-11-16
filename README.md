@@ -20,7 +20,7 @@ Table of Contents
   - [Getting Help](#getting-help)
   - [Summary of License Terms](#summary-of-license-terms)
 
-[![Discord](https://img.shields.io/discord/734090820684349521)](https://discord.gg/sTf9uYF)
+Join us on Discord - [![Discord](https://img.shields.io/discord/734090820684349521)](https://discord.gg/sTf9uYF)
 
 ## Introduction
 
@@ -79,7 +79,7 @@ sudo dpkg-reconfigure tzdata
 
 ### Installation of Docker
 
-Once you are logged in as user `aprs`, you are read to install Docker. Use the following commands; you can copy and paste them all at once, or paste them line by line:
+Once you are logged in as user `aprs`, you are ready to install Docker. Use the following commands; you can copy and paste them all at once, or paste them line by line:
 
 ```bash
 # First download the docker installation script and run it:
@@ -136,9 +136,9 @@ For these parameters, the default values are generally good as a starting point,
 
 | Environment Variable | Purpose                         | Default |
 | -------------------- | ------------------------------- | ------- |
-| `AUDIOCARD` | The number of the "audiocard" of your soundcard. If undefined, the system will try to detect the value automatically. If this doesn't work, you may have to set it manually \* | Unset |
-| `SUBDEVICE` | The number of the "subdevice" of your soundcard. If undefined, the system will try to detect the value automatically. If this doesn't work, you may have to set it manually \* | Unset |
-| `AUDIOLEVEL` | The audio level of the output of your soundcard, in percent (`0`=off; `100`=maximum) | `50` (%) |
+| `AUDIOCARD` | The number of the "audiocard" of your soundcard. If unset, the system will try to detect the value automatically. If this doesn't work, you may have to set it manually \* | Unset |
+| `SUBDEVICE` | The number of the "subdevice" of your soundcard. If unset, the system will try to detect the value automatically. If this doesn't work, you may have to set it manually \* | Unset |
+| `AUDIOLEVEL` | The audio level of the output of your soundcard, in percent (`0`=off; `100`=maximum) \*\* | `50` (%) |
 | `SYMBOL` | The symbol of your vehicle in the tracking broadcast. We strongly suggest using a (partial) description from [this list](https://github.com/nwdigitalradio/direwolf/blob/master/symbols-new.txt) rather than using the 2-character value. | `"normal car"` |
 | `OVERLAY` | Single letter or number that is overlaid on top of your vehicle symbol | Unset |
 | `VERBOSE` | If set to `yes`/`on`/`1`/`true`, produce more verbose output | Unset |
@@ -157,6 +157,8 @@ card 0: Device [USB PnP Sound Device], device 0: USB Audio [USB Audio]
 ```
 
 In this case, we should use `AUDIOCARD=0` and `SUBDEVICE=0`.
+
+\*\* The container tries to use the `Speaker Playback Switch` / `PCM Playback Switch` and `Speaker Playback Volume` / `PCM Playback Volume` capabilities of your soundcard. If this doesn't work, please open an [issue](https://github.com/sdr-enthusiasts/docker-aprs-tracker/issues) and tell us what the equivalent capability of your sound card is called. We can add this within a reasonably short turn around time.
 
 #### OTHER parameters
 
