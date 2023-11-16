@@ -215,7 +215,7 @@ I have found that tuning the audio interface in order to properly send and recei
     - tune to `144.390` (North America frequency; the frequencies for other regions can be found [here](https://www.sigidwiki.com/wiki/Automatic_Packet_Reporting_System_(APRS)#Frequencies))
     - lock the device so you don't accidentally change the frequency or settings
 - For audio RECEPTION on your APRS tracker container:
-  - Start with  `AUDIOLEVEL_RX=90` (which is the default) 
+  - Start with  `AUDIOLEVEL_RX=90` (which is the default)
   - Monitor the container logs with `docker logs -f aprs`. After a while, you should see entries like the one below. Take note of `audio level = 57(xx/xx)`; if the value is generally between 40-80, your reception is good.
 
 ```text
@@ -229,7 +229,8 @@ I have found that tuning the audio interface in order to properly send and recei
     - Session 2: `docker exec -it aprs bash -c "pkill direwolf && direwolf -x"` -- this will start transmitting audio tones. If the session finishes before you are done tuning, simply repeat this command.
   - In the `alsamixer`, make sure you select the correct audio card and are in `Playback` view
   - While listening to the audio tones on your secondary receiver, increase or decrease the volume in the `alsamixer`
-  - Once the audio sounds acceptable, please note the audio level. In the screenshot below, it's `64`, your number may vary
+  - Once the audio sounds acceptable, please note the audio level. In the screenshot below, it's `64`. Your number may vary.
+  - You can now exit `alsamixer` and press `CTRL-c` to exit Direwolf testing. 
   - Add `- AUDIOLEVEL_TX=64` (replace `64` with your number) to the `environment:` section of your `docker-compose.yml` file
   - Further experimentation may cause you to have to increase the `TXDELAY` (time in 10 msec units between the start of the transmission and the start of actually sending data). You can do this by adding `- DW_EXTRA_CONFIGS=TXDELAY=30` (`30` = 300 msec) to the `environment:` section of your `docker-compose.yml` file
 
