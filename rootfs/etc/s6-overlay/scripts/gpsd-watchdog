@@ -47,4 +47,5 @@ gps_dev_new="$(find /dev/serial/by-id/ -iname "*gps*" -printf '%l\n' | awk -F/ '
 "${s6wrap[@]}" echo "[WARNING] GPS device has changed ports! Old port: ${gps_dev} New port: ${gps_dev_new:-unknown}"
 "${s6wrap[@]}" echo "[WARNING] Restarting GPSD!"
 
-s6-svc -r /run/service/gpsd 2>/dev/null || true
+# s6-svc -r /run/service/gpsd 2>/dev/null || true
+pkill gpsd
