@@ -120,31 +120,67 @@ else
 fi
 
 # Figure out which NumID the mute button is unmute (which means set Mic Capture Switch = on):
-"${s6wrap[@]}" echo "[INFO] Ensuring the microphone is unmuted on Audio Card $AUDIOCARD"
-"${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Mic Capture Switch' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" on
-#
+capability="Mic Capture Switch"
+if amixer --card "$AUDIOCARD" contents | grep -qo "$capability"; then
+    "${s6wrap[@]}" echo "[INFO] Unmuting the microphone on Audio Card $AUDIOCARD ($capability on)"
+    "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep "$capability" | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" on
+else
+    "${s6wrap[@]}" echo "[WARNING] Couldn't figure out which parameter controls the $capability. Left it as-is."
+    "${s6wrap[@]}" echo "[WARNING] If it doesn't work, you can try to figure this out manually with:"
+    "${s6wrap[@]}" echo "          amixer --card $AUDIOCARD contents            # identity the correct numid for $capability"
+    "${s6wrap[@]}" echo "          amixer -q -c $AUDIOCARD cset numid=xxx on    # replace xxx with the correct numid"
+    "${s6wrap[@]}" echo "-------------------------------------------------------"
+fi 
+
 # Unmuting the audio output
-"${s6wrap[@]}" echo "[INFO] Ensuring the speaker is unmuted on Audio Card $AUDIOCARD"
-"${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Speaker Playback Switch' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" on
-#
+capability="Speaker Playback Switch\|PCM Playback Switch"
+if amixer --card "$AUDIOCARD" contents | grep -q "$capability"; then
+    "${s6wrap[@]}" echo "[INFO] Unmuting the speaker on Audio Card $AUDIOCARD ($capability on)"
+    "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep "$capability" | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" on
+else
+    "${s6wrap[@]}" echo "[WARNING] Couldn't figure out which parameter controls the $capability. Left it as-is."
+    "${s6wrap[@]}" echo "[WARNING] If it doesn't work, you can try to figure this out manually with:"
+    "${s6wrap[@]}" echo "          amixer --card $AUDIOCARD contents            # identity the correct numid for $capability"
+    "${s6wrap[@]}" echo "          amixer --card $AUDIOCARD cset numid=xxx on   # replace xxx with the correct numid"
+    "${s6wrap[@]}" echo "-------------------------------------------------------"
+fi 
+
 # Get the NumID and max value for the audio input level and max it out
 "${s6wrap[@]}" echo "[INFO] Set microphone volume to max on Audio Card $AUDIOCARD"
 "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Mic Capture Volume' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" "$(amixer --card "$AUDIOCARD" contents|grep -A1 'Mic Capture Volume' | sed  -n 's/.*max=\([0-9][0-9]*\).*/\1/p')"
-#
-# Switch mic the AGC off as this will mess with the audio levels
-"${s6wrap[@]}" echo "[INFO] Switch off microphone ACG on Audio Card $AUDIOCARD"
-"${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Auto Gain Control' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" off
-#
-# Set output audio level to $AUDIOLEVEL or halfway the scale if it's not defined
-audio_min="$(amixer --card "$AUDIOCARD" contents|grep -A1 'Speaker Playback Volume' | sed -n 's/^.*,min=\([0-9]\+\).*$/\1/p')"
-audio_min="${audio_min:-0}"
-audio_max="$(amixer --card "$AUDIOCARD" contents|grep -A1 'Speaker Playback Volume' | sed -n 's/^.*,max=\([0-9]\+\).*$/\1/p')"
-audio_max="${audio_max:-150}"
-AUDIOLEVEL="${AUDIOLEVEL:-50}"
-LEVEL="$(bc -l <<< "scale=0; ($audio_max - $audio_min) * $AUDIOLEVEL / 100")"
-"${s6wrap[@]}" echo "[INFO] Setting audio output volume to $LEVEL ($AUDIOLEVEL % of max $audio_max) on Audio Card $AUDIOCARD"
-"${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Speaker Playback Volume' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" "$LEVEL"
 
+# Switch mic the AGC off as this will mess with the audio levels
+# If the card doesn't have this capability, it's OK and we don't need to warn the user
+capability="Auto Gain Control"
+if amixer --card "$AUDIOCARD" contents | grep -q "$capability"; then
+    "${s6wrap[@]}" echo "[INFO] Switching off microphone ACG on Audio Card $AUDIOCARD ($capability off)"
+    "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep "$capability" | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" off
+fi
+
+# Set output audio level to $AUDIOLEVEL or halfway the scale if it's not defined
+capability="Speaker Playback Volume\|PCM Playback Volume"
+unset couldnt_set
+if amixer --card "$AUDIOCARD" contents | grep -q "$capability"; then
+    audio_min="$(amixer --card "$AUDIOCARD" contents | grep -A1 "$capability" | sed -n 's/^.*,min=\([0-9]\+\).*$/\1/p')"
+    audio_max="$(amixer --card "$AUDIOCARD" contents | grep -A1 "$capability" | sed -n 's/^.*,max=\([0-9]\+\).*$/\1/p')"
+    AUDIOLEVEL="${AUDIOLEVEL:-50}"
+    if [[ -n "$audio_min" ]] && [[ -n "$audio_max" ]]; then
+        LEVEL="$(bc -l <<< "scale=0; ($audio_max - $audio_min) * $AUDIOLEVEL / 100")"
+        "${s6wrap[@]}" echo "[INFO] Setting audio output volume to $LEVEL ($AUDIOLEVEL % of max $audio_max) on Audio Card $AUDIOCARD"
+        "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep 'Speaker Playback Volume' | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" "$LEVEL"
+    else 
+        couldnt_set=true
+    fi
+else
+    couldnt_set=true
+fi
+if [[ "$couldnt_set" == true ]]; then
+    "${s6wrap[@]}" echo "[WARNING] Couldn't figure out which parameter controls the $capability. Left it as-is."
+    "${s6wrap[@]}" echo "[WARNING] If it doesn't work, you can try to figure this out manually with:"
+    "${s6wrap[@]}" echo "          amixer --card $AUDIOCARD contents            # identity the correct numid for $capability and the max/min volume values"
+    "${s6wrap[@]}" echo "          amixer --card $AUDIOCARD cset numid=xxx lll  # replace xxx with the correct numid and lll with the desired volume level"
+    "${s6wrap[@]}" echo "-------------------------------------------------------"
+fi 
 # ------------------------------------------------------------------------------------------------------------
 # Now we will set the relevant DireWolf parameters
 
