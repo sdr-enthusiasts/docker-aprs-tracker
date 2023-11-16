@@ -138,7 +138,8 @@ For these parameters, the default values are generally good as a starting point,
 | -------------------- | ------------------------------- | ------- |
 | `AUDIOCARD` | The number of the "audiocard" of your soundcard. If unset, the system will try to detect the value automatically. If this doesn't work, you may have to set it manually \* | Unset |
 | `SUBDEVICE` | The number of the "subdevice" of your soundcard. If unset, the system will try to detect the value automatically. If this doesn't work, you may have to set it manually \* | Unset |
-| `AUDIOLEVEL` | The audio level of the output of your soundcard, in percent (`0`=off; `100`=maximum) \*\* | `50` (%) |
+| `AUDIOLEVEL_RX` | The audio level of the input of your soundcard (for reception), in percent (`0`=off; `100`=maximum) \*\* | `90` (%) |
+| `AUDIOLEVEL_TX` | The audio level of the output of your soundcard (for transmission), in percent (`0`=off; `100`=maximum) \*\* | `50` (%) |
 | `SYMBOL` | The symbol of your vehicle in the tracking broadcast. We strongly suggest using a (partial) description from [this list](https://github.com/nwdigitalradio/direwolf/blob/master/symbols-new.txt) rather than using the 2-character value. | `"normal car"` |
 | `OVERLAY` | Single letter or number that is overlaid on top of your vehicle symbol | Unset |
 | `VERBOSE` | If set to `yes`/`on`/`1`/`true`, produce more verbose output | Unset |
