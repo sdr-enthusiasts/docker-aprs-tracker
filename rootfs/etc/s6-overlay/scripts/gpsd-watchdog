@@ -1,7 +1,7 @@
 #!/command/with-contenv bash
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC1091
 
-# GPSD runtime module.
+# GPSD watchdog module.
 #---------------------------------------------------------------------------------------------
 # Copyright (C) 2023, Ramon F. Kolb (kx1t)
 #
@@ -18,23 +18,18 @@
 # If not, see <https://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------------------------
 
-#!/command/with-contenv bash
-# shellcheck shell=bash disable=SC1091,SC2015,SC2164,SC2068,SC2145
-
 source /scripts/common
 s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
-GPSD_BIN="/sbin/gpsd"
+# this module has a dependency on the gpsd module. It won't start until that module is running.
 
-GPSD_ARGS=(--nowait)
-if chk_disabled "$GPSD_START_DAEMON"; then GPSD_ARGS+=(--foreground); fi
-if chk_enabled "$VERBOSE"; then VERBOSE="1"; fi
-if [[ -n "$VERBOSE" ]]; then GPSD_ARGS+=(--debug "$VERBOSE"); fi
-if [[ -n "$GPSD_SOCKET" ]]; then GPSD_ARGS+=(--sockfile "$GPSD_SOCKET"); fi
-if [[ -n "$GPSD_OPTIONS" ]]; then GPSD_ARGS+=("$GPSD_OPTIONS"); fi
+# sleep a bit to allow gpsd to establish itself
+sleep 30
+
+# determine the current port for the GPS device:
 if chk_enabled "$GPSD_USBAUTO"; then
     # if the product name of the serial port device has gps or GPS in it, we can figure out the /dev device link for it:
-    gps_dev="$(find /dev/serial/by-id/ -iname *gps* -printf '%l\n' | awk -F/ '{print "/dev/" $NF}')"
+    gps_dev="$(find /dev/serial/by-id/ -iname "*gps*" -printf '%l\n' | awk -F/ '{print "/dev/" $NF}')"
     if [[ -n "$gps_dev" ]]; then
         "${s6wrap[@]}" echo "[INFO] GPSD_USBAUTO enabled: GPS device auto-detected on $gps_dev"
     else
@@ -42,14 +37,14 @@ if chk_enabled "$GPSD_USBAUTO"; then
     fi
     GPSD_DEVICES="${gps_dev:-${GPSD_DEVICES}}"
 fi
-GPSD_ARGS+=("${GPSD_DEVICES}")
 
-"${s6wrap[@]}" echo "[INFO] Starting: $GPSD_BIN ${GPSD_ARGS[@]}"
-#shellcheck disable=SC2048,SC2086
-"${s6wrap[@]}" $GPSD_BIN ${GPSD_ARGS[*]} \
-    | grep -vi "Cannot assign requested address" \
-    | grep -vi "unable to connect to the DBUS system bus" \
-    || true
+while [[ -e "$GPSD_DEVICES" ]]; do
+    sleep 15
+done
 
-"${s6wrap[@]}" echo "[WARNING] Exited, restarting in 10 secs"
-sleep 10
+gps_dev_new="$(find /dev/serial/by-id/ -iname "*gps*" -printf '%l\n' | awk -F/ '{print "/dev/" $NF}')"
+
+"${s6wrap[@]}" echo "[WARNING] GPS device has changed ports! Old port: ${gps_dev} New port: ${gps_dev_new:-unknown}"
+"${s6wrap[@]}" echo "[WARNING] Restarting GPSD!"
+
+s6-svc -r /run/service/gpsd 2>/dev/null || true
