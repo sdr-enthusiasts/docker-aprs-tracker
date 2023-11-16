@@ -154,7 +154,7 @@ if amixer --card "$AUDIOCARD" contents | grep -q "$capability"; then
     AUDIOLEVEL_RX="${AUDIOLEVEL_RX:-90}"
     if [[ -n "$audio_min" ]] && [[ -n "$audio_max" ]]; then
         LEVEL="$(bc -l <<< "scale=0; ($audio_max - $audio_min) * $AUDIOLEVEL_RX / 100")"
-        "${s6wrap[@]}" echo "[INFO] Setting audio output volume to $LEVEL ($AUDIOLEVEL_RX % of max $audio_max) on Audio Card $AUDIOCARD"
+        "${s6wrap[@]}" echo "[INFO] Setting audio input (RX) volume to $LEVEL ($AUDIOLEVEL_RX % of max $audio_max) on Audio Card $AUDIOCARD"
         "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep "$capability" | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" "$LEVEL"
     else 
         couldnt_set=true
@@ -187,7 +187,7 @@ if amixer --card "$AUDIOCARD" contents | grep -q "$capability"; then
     AUDIOLEVEL_TX="${AUDIOLEVEL_TX:-50}"
     if [[ -n "$audio_min" ]] && [[ -n "$audio_max" ]]; then
         LEVEL="$(bc -l <<< "scale=0; ($audio_max - $audio_min) * $AUDIOLEVEL_TX / 100")"
-        "${s6wrap[@]}" echo "[INFO] Setting audio output volume to $LEVEL ($AUDIOLEVEL_TX % of max $audio_max) on Audio Card $AUDIOCARD"
+        "${s6wrap[@]}" echo "[INFO] Setting audio output (TX) volume to $LEVEL ($AUDIOLEVEL_TX % of max $audio_max) on Audio Card $AUDIOCARD"
         "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep "$capability" | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" "$LEVEL"
     else 
         couldnt_set=true
