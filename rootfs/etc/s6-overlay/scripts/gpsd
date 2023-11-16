@@ -32,6 +32,11 @@ if chk_enabled "$VERBOSE"; then VERBOSE="1"; fi
 if [[ -n "$VERBOSE" ]]; then GPSD_ARGS+=(--debug "$VERBOSE"); fi
 if [[ -n "$GPSD_SOCKET" ]]; then GPSD_ARGS+=(--sockfile "$GPSD_SOCKET"); fi
 if [[ -n "$GPSD_OPTIONS" ]]; then GPSD_ARGS+=("$GPSD_OPTIONS"); fi
+if chk_enabled "$GPSD_USBAUTO"; then
+    # if the product name of the serial port device has gps or GPS in it, we can figure out the /dev device link for it:
+    gps_dev="$(find /dev/serial/by-id/ -iname *gps* -printf '%l\n' | awk -F/ '{print "/dev/" $NF}')"
+    GPSD_DEVICES="${gps_dev:-${GPSD_DEVICES}}"
+fi
 GPSD_ARGS+=("${GPSD_DEVICES}")
 
 "${s6wrap[@]}" echo "[INFO] Starting: $GPSD_BIN ${GPSD_ARGS[@]}"
