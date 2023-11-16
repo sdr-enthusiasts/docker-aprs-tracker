@@ -208,10 +208,12 @@ I have found that tuning the audio interface in order to properly send and recei
 - On the handheld:
   - turn up the volume to maximum
   - in the menu:
-    - set SQL=1
-    - set VOX=9
-    - switch off all extra transmissions, roger-beeps, tones, lights, etc.
-    - tune to `144.390` (in the US; the frequencies for other regions can be found [here](https://www.sigidwiki.com/wiki/Automatic_Packet_Reporting_System_(APRS)#Frequencies))
+    - set `0 - SQL` to `1`
+    - set `4 - VOX` to `9`
+    - set `5 - WN` to `narrow`
+    - switch off all extra transmissions, power-saver, roger-beeps, tones, lights, etc. The menu items I switched off were `3 - SAVE`, `6 - ABR`, `7 - TDR`, `8 - BEEP`, `10 - R-DCS`, `12 - T-DCS`, `16 - DTMFST`, `19 - PTT-ID`, `23 - BCL`, `25 - SFT-D`, `30 - RX-LED`, `35 - STE`, `36 - RP_STE`, `37 - RPT_RL`, and `39 - ROGER`
+    - tune to `144.390` (North America frequency; the frequencies for other regions can be found [here](https://www.sigidwiki.com/wiki/Automatic_Packet_Reporting_System_(APRS)#Frequencies))
+    - lock the device so you don't accidentally change the frequency or settings
 - For audio RECEPTION on your APRS tracker container:
   - Start with  `AUDIOLEVEL_RX=90` (which is the default) 
   - Monitor the container logs with `docker logs -f aprs`. After a while, you should see entries like the one below. Take note of `audio level = 57(xx/xx)`; if the value is generally between 40-80, your reception is good.
@@ -219,6 +221,21 @@ I have found that tuning the audio interface in order to properly send and recei
 ```text
 [2023-11-16 08:56:53.100][direwolf] Digipeater W1XM audio level = 57(18/33)   [NONE]   |________
 ```
+
+- For audio TRANSMISSION with your APRS tracker container:
+  - Unless you have a lot of fancy equipment, you will need a second receiver (handheld is OK) on the same APRS frequency
+  - Open two login sessions to your SBC:
+    - Session 1: `docker exec -it aprs alsamixer` -- this will open the semi-graphical `alsamixer`
+    - Session 2: `docker exec -it aprs bash -c "pkill direwolf && direwolf -x"` -- this will start transmitting audio tones. If the session finishes before you are done tuning, simply repeat this command.
+  - In the `alsamixer`, make sure you select the correct audio card and are in `Playback` view
+  - While listening to the audio tones on your secondary receiver, increase or decrease the volume in the `alsamixer`
+  - Once the audio sounds acceptable, please note the audio level. In the screenshot below, it's `64`, your number may vary
+  - Add `- AUDIOLEVEL_TX=64` (replace `64` with your number) to the `environment:` section of your `docker-compose.yml` file
+  - Further experimentation may cause you to have to increase the `TXDELAY` (time in 10 msec units between the start of the transmission and the start of actually sending data). You can do this by adding `- DW_EXTRA_CONFIGS=TXDELAY=30` (`30` = 300 msec) to the `environment:` section of your `docker-compose.yml` file
+
+After making and saving any changes to the `docker-compose.yml` file, don't forget to restart the container with `cd /opt/aprs && docker compose up -d`
+`
+![alsamixer playback](assets/alsa.png)
 
 ## Logging
 
@@ -231,14 +248,14 @@ Without the help, advice, testing, and kicking the tires of these people, things
 ## Getting Help
 
 You can [log an issue](https://github.com/sdr-enthusiasts/docker-direwolf/issues) on the project's GitHub.
-I also have a [Discord channel](https://discord.gg/sTf9uYF), feel free to [join](https://discord.gg/sTf9uYF) and converse. The #ais-catcher channel is appropriate for conversations about this package.
+I also have a [Discord channel](https://discord.gg/sTf9uYF), feel free to [join](https://discord.gg/sTf9uYF) and converse. The #general channel is appropriate for conversations about this package.
 
 ## Summary of License Terms
 
 This container is Copyright (C) 2023, Ramon F. Kolb (kx1t)
 
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License version 2 as
+it under the terms of the GNU General Public License version 3 as
 published by the Free Software Foundation.
 
 This program is distributed in the hope that it will be useful,
