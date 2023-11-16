@@ -41,9 +41,9 @@ done
 # Wait until GPSD is established
 sleep 10
 
-"${s6wrap[@]}" echo "Starting: $CHRONY_BIN ${CHRONY_ARGS[@]}"
+"${s6wrap[@]}" echo "[INFO] Starting: $CHRONY_BIN ${CHRONY_ARGS[@]}"
 #shellcheck disable=SC2048,SC2086
 "${s6wrap[@]}" $CHRONY_BIN ${CHRONY_ARGS[*]}
 
-"${s6wrap[@]}" echo "Exited, restarting in 10 secs"
+"${s6wrap[@]}" echo "[WARNING] Exited, restarting in 10 secs"
 sleep 10

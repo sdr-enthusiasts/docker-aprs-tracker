@@ -40,7 +40,12 @@ done
 # Wait until GPSD is established
 sleep 10
 
-"${s6wrap[@]}" echo "Starting: $DW_BIN ${DW_ARGS[@]}"
+if chk_enabled "$DW_DONTSTART"; then
+    "${s6wrap[@]}" echo "[DEBUG] Not starting Direwolf"
+    sleep infinity & wait $!
+fi
+
+"${s6wrap[@]}" echo "[INFO] Starting: $DW_BIN ${DW_ARGS[@]}"
 #shellcheck disable=SC2048,SC2086
 "${s6wrap[@]}" $DW_BIN ${DW_ARGS[*]}
 

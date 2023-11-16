@@ -34,12 +34,12 @@ if [[ -n "$GPSD_SOCKET" ]]; then GPSD_ARGS+=(--sockfile "$GPSD_SOCKET"); fi
 if [[ -n "$GPSD_OPTIONS" ]]; then GPSD_ARGS+=("$GPSD_OPTIONS"); fi
 GPSD_ARGS+=("${GPSD_DEVICES}")
 
-"${s6wrap[@]}" echo "Starting: $GPSD_BIN ${GPSD_ARGS[@]}"
+"${s6wrap[@]}" echo "[INFO] Starting: $GPSD_BIN ${GPSD_ARGS[@]}"
 #shellcheck disable=SC2048,SC2086
 "${s6wrap[@]}" $GPSD_BIN ${GPSD_ARGS[*]} \
     | grep -vi "Cannot assign requested address" \
     | grep -vi "unable to connect to the DBUS system bus" \
     || true
 
-"${s6wrap[@]}" echo "Exited, restarting in 10 secs"
+"${s6wrap[@]}" echo "[WARNING] Exited, restarting in 10 secs"
 sleep 10
