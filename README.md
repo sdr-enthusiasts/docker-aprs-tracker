@@ -15,6 +15,7 @@ Table of Contents
       - [MUST CHANGE parameters](#must-change-parameters)
       - [OPTIONAL parameters](#optional-parameters)
       - [OTHER parameters](#other-parameters)
+  - [Tuning the audio interface](#tuning-the-audio-interface)
   - [Logging](#logging)
   - [Acknowledgements](#acknowledgements)
   - [Getting Help](#getting-help)
@@ -191,6 +192,33 @@ In this case:
 - `PARAM2` is uncommented (if needed) and set with no value string (any existing values are removed)
 - `PARAM3` is uncommented (if needed) and leaving any existing value string in place
 - `PARAM4` is commented out
+
+## Tuning the audio interface
+
+I have found that tuning the audio interface in order to properly send and receive signals is probably the hardest part of making things work. Here are some hints (they will be updated as my experience progresses).
+
+- I am using a USB soundcard. From a software compatibility point of view, I have found both [this](https://a.co/d/1Q3t2Rh) and [this](https://a.co/d/axRJy1E) one works, but don't let yourself be limited
+  - To check if the software is compatible, start your container and do `docker exec -it aprs amixer -c 0 controls`. You should see at least these four elements:
+    - 'PCM Playback Switch' or 'Speaker Playback Switch'
+    - 'PCM Playback Volume' or 'Speaker Playback Volume'
+    - 'Mic Capture Switch'
+    - 'Mic Capture Volume'
+  - If your Playback Switch and Playback Volume is named differently, please file an [issue](https://github.com/sdr-enthusiasts/docker-aprs-tracker/issues), tell us the exact nomenclature, and we will do our best to add it as soon as possible
+- I am using a BTECH APRS-K2 cable to connect the soundcard to a Baofeng UV-5R device
+- On the handheld:
+  - turn up the volume to maximum
+  - in the menu:
+    - set SQL=1
+    - set VOX=9
+    - switch off all extra transmissions, roger-beeps, tones, lights, etc.
+    - tune to `144.390` (in the US; the frequencies for other regions can be found [here](https://www.sigidwiki.com/wiki/Automatic_Packet_Reporting_System_(APRS)#Frequencies))
+- For audio RECEPTION on your APRS tracker container:
+  - Start with  `AUDIOLEVEL_RX=90` (which is the default) 
+  - Monitor the container logs with `docker logs -f aprs`. After a while, you should see entries like the one below. Take note of `audio level = 57(xx/xx)`; if the value is generally between 40-80, your reception is good.
+
+```text
+[2023-11-16 08:56:53.100][direwolf] Digipeater W1XM audio level = 57(18/33)   [NONE]   |________
+```
 
 ## Logging
 
