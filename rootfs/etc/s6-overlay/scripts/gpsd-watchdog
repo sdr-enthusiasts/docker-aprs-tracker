@@ -23,13 +23,15 @@ s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
 # this module has a dependency on the gpsd module. It won't start until that module is running.
 
+# wait until the device is known to the gpsd service:
+while [[ ! -f /run/gpsd/current_device ]]; do sleep 1; done
+read -r gps_dev < /run/gpsd/current_device
 # sleep a bit to allow gpsd to establish itself
-sleep 30
+sleep 5
 
 # determine the current port for the GPS device:
 if chk_enabled "$GPSD_USBAUTO"; then
     # if the product name of the serial port device has gps or GPS in it, we can figure out the /dev device link for it:
-    gps_dev="$(find /dev/serial/by-id/ -iname "*gps*" -printf '%l\n' 2>/dev/null | awk -F/ '{print "/dev/" $NF}')"
     if [[ -n "$gps_dev" ]]; then
         "${s6wrap[@]}" echo "[INFO] GPSD_USBAUTO enabled: GPS device auto-detected on $gps_dev"
     else
@@ -41,6 +43,8 @@ fi
 while [[ -e "$GPSD_DEVICES" ]]; do
     sleep 15
 done
+# sometimes it takes a few secs for the new device to become listed
+sleep 5
 
 gps_dev_new="$(find /dev/serial/by-id/ -iname "*gps*" -printf '%l\n' 2>/dev/null | awk -F/ '{print "/dev/" $NF}')"
 

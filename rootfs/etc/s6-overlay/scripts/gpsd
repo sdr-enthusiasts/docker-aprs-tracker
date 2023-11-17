@@ -25,6 +25,7 @@ source /scripts/common
 s6wrap=(s6wrap --quiet --timestamps --prepend="$(basename "$0")" --args)
 
 GPSD_BIN="/sbin/gpsd"
+mkdir -p /run/gpsd
 
 GPSD_ARGS=(--nowait)
 if chk_disabled "$GPSD_START_DAEMON"; then GPSD_ARGS+=(--foreground); fi
@@ -43,6 +44,7 @@ if chk_enabled "$GPSD_USBAUTO"; then
     GPSD_DEVICES="${gps_dev:-${GPSD_DEVICES}}"
 fi
 GPSD_ARGS+=("${GPSD_DEVICES}")
+echo "${GPSD_DEVICES}" > /run/gpsd/current_device
 
 "${s6wrap[@]}" echo "[INFO] Starting: $GPSD_BIN ${GPSD_ARGS[@]}"
 #shellcheck disable=SC2048,SC2086
