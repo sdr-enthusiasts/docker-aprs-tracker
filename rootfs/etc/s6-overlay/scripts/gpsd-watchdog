@@ -53,3 +53,4 @@ gps_dev_new="$(find /dev/serial/by-id/ -iname "*gps*" -printf '%l\n' 2>/dev/null
 
 # s6-svc -r /run/service/gpsd 2>/dev/null || true
 pkill gpsd
+rm -f /run/gpsd/current_device
