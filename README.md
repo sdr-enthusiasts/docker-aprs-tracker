@@ -39,11 +39,11 @@ The maturity of the container is low. This means that there will probably be bug
 
 Currently, this image should pull and run on the following architectures:
 
-- `arm32v7`, `armv7l`, `armhf`: ARMv7 32-bit (Odroid HC1/HC2/XU4, RPi 2/3/4 32-bit)
-- `arm64`, `aarch64`: ARMv8 64-bit (RPi 4 64-bit OSes)
+- `arm32v7`, `armv7l`, `armhf`: ARMv7 32-bit (Raspberry Pi 2/3/4 32-bit, Odroid HC1/HC2/XU4)
+- `arm64`, `aarch64`: ARMv8 64-bit (Raspberry Pi 3B+/4B 64-bit OSes, DietPi, LePotato, OrangePi, etc)
 - `amd64`, `x86_64`: X86 64-bit Linux (Linux PC)
 
-Other architectures (Windows, Mac) are not currently supported, but feel free to see if the container builds and runs for these.
+Other architectures (`i386`: Windows, Mac; `armel`, `armv6`: Raspberry PiZero / 1) are not currently supported due to incompatibility with the S6 container manager we use.
 
 ## Software Installation
 
