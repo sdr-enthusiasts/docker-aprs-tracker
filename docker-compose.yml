@@ -1,8 +1,7 @@
 version: '3.8'
 services:
   aprs:
-    #image: ghcr.io/sdr-enthusiasts/docker-aprs-tracker
-    build: https://github.com/sdr-enthusiasts/docker-aprs-tracker.git
+    image: ghcr.io/sdr-enthusiasts/docker-aprs-tracker
     container_name: aprs
     hostname: aprs
     restart: always
@@ -11,13 +10,19 @@ services:
     privileged: true
     environment:
       - VERBOSE=false
-      - MYCALL=KX1T-1
+      - MYCALL=NOCALL     # set your callsign before using the container!
+      - DW_EXTRA_CONFIGS=TXDELAY=30
+      - DW_EXTRA_CMDLINEARGS=-r 48000
+      - DW_TB_COMMENT="Myname nocall@amsat.org"
+      - AUDIOLEVEL_TX=64
+     # - DW_DEBUG=tog
+     # - DW_DONTSTART=true
     tmpfs:
       - /run:exec,size=32M
       - /tmp:size=32M
       - /var/log:size=32M
     ports:
-       - 2947:2947
+      - 2947:2947    # exposes the GPSD port in case you want to use it for other purposes on the device
     volumes:
       - "/etc/localtime:/etc/localtime:ro"
       - "/etc/timezone:/etc/timezone:ro"

@@ -146,6 +146,7 @@ For these parameters, the default values are generally good as a starting point,
 | `VERBOSE` | If set to `yes`/`on`/`1`/`true`, produce more verbose output | Unset |
 | `DW_DEBUG` | Sets debug verbosity for DireWolf. For accepted values, see `docker exec -it direwolf --help` | Unset |
 | `DW_EXTRA_CMDLINEARGS` | Any extra command line arguments you want to pass to DireWolf | Unset |
+| `DW_TB_COMMENT` | Any comment text you want to add to your Tracker Beacon transmissions | Unset |
 
 \* If the automatic setting doesn't work, you can show which audio devices, cards and subdevices are available on your system with the following command:
 
