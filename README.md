@@ -25,13 +25,13 @@ Join us on Discord - [![Discord](https://img.shields.io/discord/7340908206843495
 
 ## Introduction
 
-NOTE - DO NOT USE - NOT YET READY FOR PRIMETIME / DEPLOYMENT. CHECK LATER IF THIS MESSAGE IS REMOVED
-
 Docker container for a mobile / stand-alone APRS tracker. Contains:
 
 - [WB2OSZ's excellent APRS software TNC "DireWolf"](https://github.com/wb2osz/direwolf/)
 - GPSD for receiving location information from a GPS dongle and for maintaining the device time
 - Chrony for setting the device time
+
+The maturity of the container is low. This means that there will probably be bugs, missing features, etc. You should expect frequent software updates and frequent new container images.
 
 ## Prerequisites
 
@@ -231,7 +231,7 @@ I have found that tuning the audio interface in order to properly send and recei
   - In the `alsamixer`, make sure you select the correct audio card and are in `Playback` view
   - While listening to the audio tones on your secondary receiver, increase or decrease the volume in the `alsamixer`
   - Once the audio sounds acceptable, please note the audio level. In the screenshot below, it's `64`. Your number may vary.
-  - You can now exit `alsamixer` and press `CTRL-c` to exit Direwolf testing. 
+  - You can now exit `alsamixer` and press `CTRL-c` to exit Direwolf testing.
   - Add `- AUDIOLEVEL_TX=64` (replace `64` with your number) to the `environment:` section of your `docker-compose.yml` file
   - Further experimentation may cause you to have to increase the `TXDELAY` (time in 10 msec units between the start of the transmission and the start of actually sending data). You can do this by adding `- DW_EXTRA_CONFIGS=TXDELAY=30` (`30` = 300 msec) to the `environment:` section of your `docker-compose.yml` file
 
