@@ -262,10 +262,11 @@ if [[ -n "$VIA" ]]; then
 fi
 
 if [[ -n "$DW_TB_COMMENT" ]]; then
+    DW_TB_COMMENT="${DW_TB_COMMENT//|/-}"       # replace | with - in comment to make it sed-safe
     if grep -qio "^\s*#*\s*TBEACON.*COMMENT=.*$" "$DWCONFIGFILE"; then 
-        sed -i "s/^\s*#*\s*\(TBEACON.*COMMENT=\).\+\(\b.*\)$/\1${DW_TB_COMMENT}\2/g" "$DWCONFIGFILE"
+        sed -i "s|^\s*#*\s*\(TBEACON.*COMMENT=\).\+\(\b.*\)$|\1${DW_TB_COMMENT}\2|g" "$DWCONFIGFILE"
     else
-        sed -i "s/^\s*#*\s*\(TBEACON.*\)$/\1 COMMENT=${DW_TB_COMMENT}/g" "$DWCONFIGFILE"
+        sed -i "s|^\s*#*\s*\(TBEACON.*\)$|\1 COMMENT=${DW_TB_COMMENT}|g" "$DWCONFIGFILE"
     fi
     "${s6wrap[@]}" echo "[INFO] Setting COMMENT: $(grep -o "^\s*#*\s*TBEACON.*$" "$DWCONFIGFILE")"
 fi
