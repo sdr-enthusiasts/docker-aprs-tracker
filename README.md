@@ -16,6 +16,7 @@ Table of Contents
       - [OPTIONAL parameters](#optional-parameters)
       - [OTHER parameters](#other-parameters)
   - [Tuning the audio interface](#tuning-the-audio-interface)
+  - [Hardware](#hardware)
   - [Logging](#logging)
   - [Acknowledgements](#acknowledgements)
   - [Getting Help](#getting-help)
@@ -238,6 +239,21 @@ I have found that tuning the audio interface in order to properly send and recei
 After making and saving any changes to the `docker-compose.yml` file, don't forget to restart the container with `cd /opt/aprs && docker compose up -d`
 `
 ![alsamixer playback](assets/alsa.png)
+
+## Hardware
+
+Nothing is set in stone, and I have been experimenting with a number of different configurations.
+
+- SBC: I've tried Raspberry Pi 3B+, Raspberry Pi 4B, and LePotato. They all function well; the Raspi4 is definitely overkill
+- Soundcard: I have used [this AB13X based dongle](https://a.co/d/j5zJBzk), and [this C-Media based dongle](https://a.co/d/4ZmEogu). Both work fine. However... read on below
+- Radio: Baofeng handheld, any of the UV-5R series devices. They work OK
+- GPS: [this VK161 based "GPS Mouse"](https://a.co/d/0DfSNQy)
+- Interface Cable: [BTech APRS-K1](https://a.co/d/cDgS5KW). (Read on below)
+
+This works *somewhat*. The circuit lacks a much needed PTT and the Vox circuit creates a very long transmission tail that will make you miss any repeated signals, and it will probably cause many repeaters to transmit over your tail. [No good, Mr. George!](https://youtu.be/DUhKXwdLjrs)
+
+The solution as noted by many people is to use a CM108 based sound card and add a PTT connector to it. There is a [website](https://github.com/skuep/AIOC) that creates a all-in-one solution with a soundcard that is directly pluggable into any Kenwood-standard TX/RX audio connector, including Baofeng devives. You can order these devices assembled from [na6d.com](https://na6d.com/) (US shipping only). This device does need to get programmed (instruction on the [website](https://github.com/skuep/AIOC)) but that looks like an easy thing to do. I will update this once I receive the gadget.
+This will replace the need for a sound card and a APRS-K1 cable for more or less the same price.
 
 ## Logging
 
