@@ -49,7 +49,7 @@ function setdwconfig() {
 # setdwconfig PTT ""
 #    # PTT CM108 --> PTT
 
-    local param="${1^^}"
+    local param="${1}"
     local value="${*:2}"
 
     if [[ -z "$param" ]]; then
