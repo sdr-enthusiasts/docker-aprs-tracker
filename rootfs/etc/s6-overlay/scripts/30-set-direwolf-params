@@ -299,14 +299,14 @@ if [[ -n "$DW_EXTRA_CONFIGS" ]]; then
     for instance in "${configs[@]}"
     do
         # don't do this -- instance="${instance^^}"
-        while [[ "${instance:0:1}" == " " ]]; do instance="${instance:1}"; done
-        param="${instance%%=*}" # all before the first "="
-        value="${instance#*=}"  # all after the first "="
+        instance="${instance#"${instance%%[![:space:]]*}"}" #strip initial spaces
+        param="${instance%%[:space:]*}" # all before the first space
+        value="${instance#*[:space:]}"  # all after the first "="
         if [[ -z "${instance}" ]]; then
             # Instance empty: skip
             continue
-        elif ! grep -qo "=" <<< "$instance"; then
-            # If there's no "=", don't pass in a parameter
+        elif ! grep -q '[[:space:]]' <<< "$instance"; then
+            # If there's no value, don't pass it in
             setdwconfig "${param}"
         else
             setdwconfig "${param}" "${value}"
