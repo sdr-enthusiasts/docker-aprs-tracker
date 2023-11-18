@@ -35,7 +35,8 @@ function setdwconfig() {
 # function to set direwolf config item
 # usage: setdwconfig PARAM VALUE STRING
 # If VALUE STRING is not present, it will simply uncomment PARAM if it exists, or add it (without values) to the end of the config file
-# If VALUE STRING is specified as "VALUE" "STRING", "VALUE STRING", or "", it will uncomment and set value to PARAM VALUE STRING, or add PARAM VALUE STRING to the end of the config file
+# If VALUE STRING is specified as "VALUE" "STRING", "VALUE STRING", or "", it will uncomment and set value to PARAM VALUE STRING, or add PARAM VALUE STRING to the end of the config file if the param is not present
+# If PARAM starts with "add:", it will add PARAM VALUE STRING to the end of the document regardless of the existence of the same param in the doc
 # If value string == "remove" (lowercase letters), then comment PARAM if it exists
 #
 # Examples:
@@ -72,9 +73,10 @@ function setdwconfig() {
         # $value has an (empty or non-empty) value:
         # if $param exists in file, uncomment if needed and replace the existing value with the new value;
         # if $param doesn't exist, add $param and $value to the end of the file  
-        if grep -qo "^\s*#*\s*${param}\b.*$" "$DWCONFIGFILE"; then
+        if grep -qo "^\s*#*\s*${param}\b.*$" "$DWCONFIGFILE" && [[ "${param:0:4}" != "add:" ]]; then
             sed -i "s|^\s*#*\s*${param}\b.*$|${param} ${value}|g" "$DWCONFIGFILE"
         else
+            if [[ "${param:0:4}" == "add:" ]]; then param="${param:4}"; fi
             {   echo -n "${param}"
                 if [[ -n "${value}" ]]; then
                     echo " ${value}"

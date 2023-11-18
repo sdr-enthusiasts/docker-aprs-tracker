@@ -181,19 +181,21 @@ The `DW_EXTRA_CONFIGS` parameter can be used to add or change additional paramet
 ...
 environment:
     DW_EXTRA_CONFIGS=
-       PARAM1=value string "here";
-       PARAM2=;
+       PARAM1 value string "here";
+       PARAM2 "";
        PARAM3;
-       PARAM4=remove
+       PARAM4=remove;
+       add:PARAM5 value string here
 ...
 ```
 
 In this case:
 
-- `PARAM1` is uncommented (if needed) and set with `value string "here"` (replacing any existing values if they exist)
-- `PARAM2` is uncommented (if needed) and set with no value string (any existing values are removed)
+- `PARAM1` is uncommented (if needed) and replaced with `value string "here"` (replacing any existing values if they exist)
+- `PARAM2` is uncommented (if needed) and replaced with no value string (any existing values are removed)
 - `PARAM3` is uncommented (if needed) and leaving any existing value string in place
 - `PARAM4` is commented out
+- `PARAM5` is added to the document regardless of the existence of the parameter. You can use this to add the same parameter multiple times
 
 ## Tuning the audio interface
 

@@ -19,11 +19,12 @@ services:
       - DW_DEBUG=togm
       - DW_EXTRA_CONFIGS=
             TXDELAY=30;
-            CBEACON every=1:00 delay=0:10 SYMBOL=RH VIA=WIDE1-1,WIDE2-1 infocmd="telem-parm.pl KX1T-1 time_of_measurment ionizing_bg_radiation";
-            CBEACON every=1:00 delay=0:12 SYMBOL=RH VIA=WIDE1-1,WIDE2-1 infocmd="telem-unit.pl KX1T-1 secs_since_epoch nSv/h";
-            CBEACON every=1:00 delay=0:14 SYMBOL=RH VIA=WIDE1-1,WIDE2-1 infocmd="telem-data.pl KX1T-1 $(/tools/get_geiger.sh)";
-            CBEACON every=1:00 delay=0:16 SYMBOL=RH VIA=WIDE1-1,WIDE2-1 infocmd="telem-bits.pl KX1T-1 11111111 ""https://kx1t.com/geiger Belmont MA"" ";
-            TBEACON remove
+            add:CBEACON every=1:00 delay=0:10 SYMBOL=RH VIA=WIDE1-1,WIDE2-1 infocmd="telem-parm.pl KX1T-1 time_of_measurment ionizing_bg_radiation";
+            add:CBEACON every=1:00 delay=0:12 SYMBOL=RH VIA=WIDE1-1,WIDE2-1 infocmd="telem-unit.pl KX1T-1 secs_since_epoch nSv/h";
+            add:CBEACON every=1:00 delay=0:14 SYMBOL=RH VIA=WIDE1-1,WIDE2-1 infocmd="telem-data.pl KX1T-1 $(/tools/get_geiger.sh)";
+            add:CBEACON every=1:00 delay=0:16 SYMBOL=RH VIA=WIDE1-1,WIDE2-1 infocmd="telem-bits.pl KX1T-1 11111111 ""https://kx1t.com/geiger Belmont MA"" ";
+            TBEACON remove;
+            SMARTBEACONING remove;
       - DW_EXTRA_CMDLINEARGS=-r 48000
       - AUDIOLEVEL_TX=64
       - DW_TB_COMMENT="Ramon kx1t@amsat.org https://kx1t.com"
