@@ -59,21 +59,21 @@ function setdwconfig() {
     elif [[ -z "${2+x}" ]]; then
         # $param is present but there's no value: uncomment if exists or add $param to the file if it doesn't exist
         if grep -qo "^\s*#*\s*${param}\b.*$" "$DWCONFIGFILE"; then
-            sed -i "s/^\s*#*\s*\(${param}\b.*\)$/\1/g" "$DWCONFIGFILE"
+            sed -i "s|^\s*#*\s*\(${param}\b.*\)$|\1|g" "$DWCONFIGFILE"
         else
             echo "$param" >> "$DWCONFIGFILE"
         fi
     
     elif [[ "$2" == "remove" ]]; then
         # comment out $param if it exists; do nothing if if doesn't exist
-        sed -i "s/^\s*#*\s*\(${param}\b.*\)$/# \1/g" "$DWCONFIGFILE"
+        sed -i "s|^\s*#*\s*\(${param}\b.*\)$|# \1|g" "$DWCONFIGFILE"
     
     else
         # $value has an (empty or non-empty) value:
         # if $param exists in file, uncomment if needed and replace the existing value with the new value;
         # if $param doesn't exist, add $param and $value to the end of the file  
         if grep -qo "^\s*#*\s*${param}\b.*$" "$DWCONFIGFILE"; then
-            sed -i "s/^\s*#*\s*${param}\b.*$/${param} ${value}/g" "$DWCONFIGFILE"
+            sed -i "s|^\s*#*\s*${param}\b.*$|${param} ${value}|g" "$DWCONFIGFILE"
         else
             {   echo -n "${param}"
                 if [[ -n "${value}" ]]; then
@@ -89,7 +89,7 @@ function setdwconfig() {
 # This section is adapted from https://github.com/kx1t/docker-noisecapt/blob/main/rootfs/etc/services.d/noisecapt/run
 
 if [[ -z "$AUDIOCARD" ]]; then
-    AUDIOCARD="$(arecord --list-devices | sed  -n 's/.*card \([0-9][0-9]*\).*/\1/p')"
+    AUDIOCARD="$(arecord --list-devices | sed  -n 's|.*card \([0-9][0-9]*\).*|\1|p')"
     if [[ -z "$AUDIOCARD" ]]; then
         "${s6wrap[@]}" echo "[FATAL] Cannot determine the audio card."
         "${s6wrap[@]}" echo "[FATAL] This is what we see:"
@@ -105,7 +105,7 @@ else
 fi
 
 if [[ -z "$SUBDEVICE" ]]; then   
-    SUBDEVICE="$(arecord --list-devices | sed -n 's/^\s*Subdevice #\([0-9]\+\):.*$/\1/p')"
+    SUBDEVICE="$(arecord --list-devices | sed -n 's|^\s*Subdevice #\([0-9]\+\):.*$|\1|p')"
      if [[ -z "$SUBDEVICE" ]]; then
         "${s6wrap[@]}" echo "[WARNING] Cannot determine the subdevice for Audio Card $AUDIOCARD."
         "${s6wrap[@]}" echo "[WARNING] This is what we see:"
@@ -123,7 +123,7 @@ fi
 capability="Mic Capture Switch"
 if amixer --card "$AUDIOCARD" contents | grep -qo "$capability"; then
     "${s6wrap[@]}" echo "[INFO] Unmuting the microphone on Audio Card $AUDIOCARD ($capability on)"
-    "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep "$capability" | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" on
+    "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep "$capability" | sed  -n 's|numid=\([0-9]\+\).*|\1|p')" on
 else
     "${s6wrap[@]}" echo "[WARNING] Couldn't figure out which parameter controls the $capability. Left it as-is."
     "${s6wrap[@]}" echo "[WARNING] If it doesn't work, you can try to figure this out manually with:"
@@ -136,7 +136,7 @@ fi
 capability="Speaker Playback Switch\|PCM Playback Switch"
 if amixer --card "$AUDIOCARD" contents | grep -q "$capability"; then
     "${s6wrap[@]}" echo "[INFO] Unmuting the speaker on Audio Card $AUDIOCARD ($capability on)"
-    "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep "$capability" | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" on
+    "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep "$capability" | sed  -n 's|numid=\([0-9]\+\).*|\1|p')" on
 else
     "${s6wrap[@]}" echo "[WARNING] Couldn't figure out which parameter controls the $capability. Left it as-is."
     "${s6wrap[@]}" echo "[WARNING] If it doesn't work, you can try to figure this out manually with:"
@@ -149,13 +149,13 @@ fi
 capability="Mic Capture Volume"
 unset couldnt_set
 if amixer --card "$AUDIOCARD" contents | grep -q "$capability"; then
-    audio_min="$(amixer --card "$AUDIOCARD" contents | grep -A1 "$capability" | sed -n 's/^.*,min=\([0-9]\+\).*$/\1/p')"
-    audio_max="$(amixer --card "$AUDIOCARD" contents | grep -A1 "$capability" | sed -n 's/^.*,max=\([0-9]\+\).*$/\1/p')"
+    audio_min="$(amixer --card "$AUDIOCARD" contents | grep -A1 "$capability" | sed -n 's|^.*,min=\([0-9]\+\).*$|\1|p')"
+    audio_max="$(amixer --card "$AUDIOCARD" contents | grep -A1 "$capability" | sed -n 's|^.*,max=\([0-9]\+\).*$|\1|p')"
     AUDIOLEVEL_RX="${AUDIOLEVEL_RX:-90}"
     if [[ -n "$audio_min" ]] && [[ -n "$audio_max" ]]; then
         LEVEL="$(bc -l <<< "scale=0; ($audio_max - $audio_min) * $AUDIOLEVEL_RX / 100")"
         "${s6wrap[@]}" echo "[INFO] Setting audio input (RX) volume to $LEVEL (${AUDIOLEVEL_RX}% of max $audio_max) on Audio Card $AUDIOCARD"
-        "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep "$capability" | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" "$LEVEL"
+        "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep "$capability" | sed  -n 's|numid=\([0-9]\+\).*|\1|p')" "$LEVEL"
     else 
         couldnt_set=true
     fi
@@ -175,20 +175,20 @@ fi
 capability="Auto Gain Control"
 if amixer --card "$AUDIOCARD" contents | grep -q "$capability"; then
     "${s6wrap[@]}" echo "[INFO] Switching off microphone ACG on Audio Card $AUDIOCARD ($capability off)"
-    "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep "$capability" | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" off
+    "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep "$capability" | sed  -n 's|numid=\([0-9]\+\).*|\1|p')" off
 fi
 
 # Set output audio level to $AUDIOLEVEL_TX or halfway the scale if it's not defined
 capability="Speaker Playback Volume\|PCM Playback Volume"
 unset couldnt_set
 if amixer --card "$AUDIOCARD" contents | grep -q "$capability"; then
-    audio_min="$(amixer --card "$AUDIOCARD" contents | grep -A1 "$capability" | sed -n 's/^.*,min=\([0-9]\+\).*$/\1/p')"
-    audio_max="$(amixer --card "$AUDIOCARD" contents | grep -A1 "$capability" | sed -n 's/^.*,max=\([0-9]\+\).*$/\1/p')"
+    audio_min="$(amixer --card "$AUDIOCARD" contents | grep -A1 "$capability" | sed -n 's|^.*,min=\([0-9]\+\).*$|\1|p')"
+    audio_max="$(amixer --card "$AUDIOCARD" contents | grep -A1 "$capability" | sed -n 's|^.*,max=\([0-9]\+\).*$|\1|p')"
     AUDIOLEVEL_TX="${AUDIOLEVEL_TX:-50}"
     if [[ -n "$audio_min" ]] && [[ -n "$audio_max" ]]; then
         LEVEL="$(bc -l <<< "scale=0; ($audio_max - $audio_min) * $AUDIOLEVEL_TX / 100")"
         "${s6wrap[@]}" echo "[INFO] Setting audio output (TX) volume to $LEVEL (${AUDIOLEVEL_TX}% of max $audio_max) on Audio Card $AUDIOCARD"
-        "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep "$capability" | sed  -n 's/numid=\([0-9]\+\).*/\1/p')" "$LEVEL"
+        "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep "$capability" | sed  -n 's|numid=\([0-9]\+\).*|\1|p')" "$LEVEL"
     else 
         couldnt_set=true
     fi
@@ -228,9 +228,9 @@ if [[ -n "$SYMBOL" ]]; then
     # There are many ways that the use of certain characters in the symbols will break the sed.
     # So -- strongly prefer using SYMBOL="normal car" over SYMBOL=\> (which should probably be escaped as SYMBOL=\\> for it to work)
     if grep -qo "^\s*#*\s*TBEACON.*SYMBOL=.*$" "$DWCONFIGFILE"; then 
-        sed -i "s/^\s*#*\s*\(TBEACON.*SYMBOL=\).\+\(\b.*\)$/\1$SYMBOL\2/g" "$DWCONFIGFILE"
+        sed -i "s|^\s*#*\s*\(TBEACON.*SYMBOL=\).\+\(\b.*\)$|\1$SYMBOL\2|g" "$DWCONFIGFILE"
     else
-        sed -i "s/^\s*#*\s*\(TBEACON.*\)$/\1 SYMBOL=$SYMBOL/g" "$DWCONFIGFILE"
+        sed -i "s|^\s*#*\s*\(TBEACON.*\)$|\1 SYMBOL=$SYMBOL|g" "$DWCONFIGFILE"
     fi
     "${s6wrap[@]}" echo "[INFO] Setting SYMBOL: $(grep -o "^\s*#*\s*TBEACON.*$" "$DWCONFIGFILE")"
 fi
@@ -240,9 +240,9 @@ if [[ -n "$OVERLAY" ]]; then
         "${s6wrap[@]}" echo "[WARNING] Ignoring OVERLAY. It must be a single letter or digit. You specified: OVERLAY=$OVERLAY"
     else
         if grep -qo "^\s*#*\s*TBEACON.*OVERLAY=.*$" "$DWCONFIGFILE"; then 
-            sed -i "s/^\s*#*\s*\(TBEACON.*OVERLAY=\).\+\(\b.*\)$/\1$OVERLAY\2/g" "$DWCONFIGFILE"
+            sed -i "s|^\s*#*\s*\(TBEACON.*OVERLAY=\).\+\(\b.*\)$|\1$OVERLAY\2|g" "$DWCONFIGFILE"
         else
-            sed -i "s/^\s*#*\s*\(TBEACON.*\)$/\1 OVERLAY=$OVERLAY/g" "$DWCONFIGFILE"
+            sed -i "s|^\s*#*\s*\(TBEACON.*\)$|\1 OVERLAY=$OVERLAY|g" "$DWCONFIGFILE"
         fi
     fi
     "${s6wrap[@]}" echo "[INFO] Setting OVERLAY: $(grep -o "^\s*#*\s*TBEACON.*$" "$DWCONFIGFILE")"
@@ -253,9 +253,9 @@ if [[ -n "$VIA" ]]; then
         "${s6wrap[@]}" echo "[WARNING] Ignoring VIA. It must contain only A-Z, 0-9, \",\", and \"-\", for example \"WIDE1-1,WIDE2-1\". You specified: VIA=${VIA^^}"
     else
         if grep -qo "^\s*#*\s*TBEACON.*VIA=.*$" "$DWCONFIGFILE"; then 
-            sed -i "s/^\s*#*\s*\(TBEACON.*VIA=\).\+\(\b.*\)$/\1${VIA^^}\2/g" "$DWCONFIGFILE"
+            sed -i "s|^\s*#*\s*\(TBEACON.*VIA=\).\+\(\b.*\)$|\1${VIA^^}\2|g" "$DWCONFIGFILE"
         else
-            sed -i "s/^\s*#*\s*\(TBEACON.*\)$/\1 VIA=${VIA^^}/g" "$DWCONFIGFILE"
+            sed -i "s|^\s*#*\s*\(TBEACON.*\)$|\1 VIA=${VIA^^}|g" "$DWCONFIGFILE"
         fi
     fi
     "${s6wrap[@]}" echo "[INFO] Setting VIA: $(grep -o "^\s*#*\s*TBEACON.*$" "$DWCONFIGFILE")"
