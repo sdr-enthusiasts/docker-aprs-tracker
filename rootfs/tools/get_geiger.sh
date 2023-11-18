@@ -1,16 +1,13 @@
-#!/bin/bash
-#shellcheck shell=bash
-#shellcheck disable=SC2015
+#!/command/with-contenv bash
+# shellcheck shell=bash disable=SC1091
 
-# find_mmsi:
-# provide info about an MMSI from VesselAlert db
+# get data from kx1t's prometheus instance related to the Belmont geiger counter
 #---------------------------------------------------------------------------------------------
-# Copyright (C) 2022-2023, Ramon F. Kolb (kx1t)
+# Copyright (C) 2023, Ramon F. Kolb (kx1t)
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
-# Free Software Foundation, either version 3 of the License, or (at your option)
-# any later version.
+# Free Software Foundation, version 3 of the License.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -20,9 +17,12 @@
 # If not, see <https://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------------------------
 
-# redirect stderr to stdout so it's picked up in the docker logs
-exec 2>&1
-# all errors will show a line number and the command used to produce the error
-[[ -n "$VESSELDBFILE" ]] && VESSELDBFILE="/data/vessel.db" || true
+TELEM_PROM_URL=http://192.168.0.29:9090
+TELEM_PROM_QUERY='geiger_usvh{job="geiger-bos"}'
+TELEM_JQ_FILTER='.data.result[0].value[]'
 
-sed 's/"\s\+/"\n/g' "$VESSELDBFILE" | grep "$1" | sort
+readarray -t x < <(curl -gsSL "$TELEM_PROM_URL/api/v1/query?query=$TELEM_PROM_QUERY" |jq -r "$TELEM_JQ_FILTER")
+time="${x[0]%%.*}"
+value="$(bc -l <<< "scale=0; ${x[1]}*1000 / 1")"
+
+echo "$time $value"

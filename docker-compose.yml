@@ -6,8 +6,11 @@ services:
     hostname: aprs
     restart: always
     device_cgroup_rules:
-      - 'c 189:* rwm'
-    privileged: true
+      - 'c 189:* rwm'   # expose USB devices to the container
+      - 'c 166:* rwm'   # expose Serial devices (incl. GPS Serial2USB devices) to the container
+    cap_add:      # needed for chrony to be able to set the clock
+      - SYS_TIME
+      - SYS_RESOURCE
     environment:
       - VERBOSE=false
       - MYCALL=NOCALL     # set your callsign before using the container!
