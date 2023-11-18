@@ -33,9 +33,11 @@ if [[ -n "$DW_DEBUG" ]]; then DW_ARGS+=("-d $DW_DEBUG"); fi
 if [[ -n "$DW_EXTRA_CMDLINEARGS" ]]; then DW_ARGS+=("$DW_EXTRA_CMDLINEARGS"); fi
 
 # Wait until GPSD is running:
-while ! pgrep gpsd >/dev/null 2>&1; do
-    sleep 1
-done
+if ! chk_disabled "$DW_WAIT_GPSD"; then 
+    while ! pgrep gpsd >/dev/null 2>&1; do
+        sleep 1
+    done
+fi
 
 # Wait until GPSD is established
 sleep 10

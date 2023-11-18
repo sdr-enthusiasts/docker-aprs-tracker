@@ -298,7 +298,8 @@ if [[ -n "$DW_EXTRA_CONFIGS" ]]; then
     # Now loop through each of the elements:
     for instance in "${configs[@]}"
     do
-        instance="${instance^^}"
+        # don't do this -- instance="${instance^^}"
+        while [[ "${instance:0:1}" == " " ]]; do instance="${instance:1}"; done
         param="${instance%%=*}" # all before the first "="
         value="${instance#*=}"  # all after the first "="
         if [[ -z "${instance}" ]]; then
