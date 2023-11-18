@@ -300,8 +300,9 @@ if [[ -n "$DW_EXTRA_CONFIGS" ]]; then
     do
         # don't do this -- instance="${instance^^}"
         instance="${instance#"${instance%%[![:space:]]*}"}" #strip initial spaces
-        param="${instance%%[:space:]*}" # all before the first space
-        value="${instance#*[:space:]}"  # all after the first "="
+        param="${instance%% *}" # all before the first space
+        value="${instance#* }"  # all after the first space
+        value="${value#"${value%%[![:space:]]*}"}" # strip initial spaces
         if [[ -z "${instance}" ]]; then
             # Instance empty: skip
             continue
