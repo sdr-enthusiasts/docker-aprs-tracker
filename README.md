@@ -89,16 +89,55 @@ wget -q https://raw.githubusercontent.com/sdr-enthusiasts/docker-install/main/do
 chmod +x docker-install.sh
 ./docker-install.sh no-chrony
 rm -f ./docker-install.sh
+```
 
-# Last, let's make sure that there's no NTP, GPSD or Time Sync client installed on your system
-# because these will interfere with the docker container.
-# The docker container will use the connected GPS to update the system time.
-# You can ignore any error messages like "Failed to disable unit: Unit file xxx.service does not exist."
-# These error messages simply mean that your system didn't have the service to begin with.
+### Preparing your system for use with your container
+
+Next, let's make sure that there's no NTP, GPSD or Time Sync client installed on your system because these will interfere with the docker container. The docker container will use the connected GPS to update the system time.
+You can ignore any error messages like "Failed to disable unit: Unit file xxx.service does not exist". These error messages simply mean that your system didn't have the service to begin with.
+
+Then we will put a `udev` rule in place that ensures that your USB/Serial GPS always is mapped to `/dev/gps`. Right now, it has a limited set of GPS models; see below on how to add yours if you have a different model.
+
+```bash
+# Remove any system services that may interfere with the container.
+# The container will take care of setting the system time, so we don't need these services on the host
 sudo systemctl disable systemd-timesyncd -q --now 
 sudo systemctl disable chrony -q --now
 sudo systemctl disable ntpd -q --now
 sudo systemctl disable gpsd -q --now
+
+# Now let's add some udev rules so your GPS data is always available at /dev/gps
+# Then we trigger udevadm to read and re-apply all rules
+sudo mkdir -p -m 755 /etc/udev/rules.d/
+sudo wget -q https://raw.githubusercontent.com/sdr-enthusiasts/docker-aprs-tracker/main/assets/90-gps.rules -o /etc/udev/rules.d/90-gps.rules
+sudo udevadm trigger
+```
+
+### Adding your GPS to the `udev` rules
+
+At this moment, we only have a limited set of Ublox GPS devices in our mapping ruleset. It's easy to add yours if you have a different one:
+
+- Connect your USB GPS to the board
+- Log in to your board, and give this command: `lsusb`. Now a list of devices is shown. Identify your GPS device in that list. For example:
+
+```text
+Bus 001 Device 021: ID 1546:01a8 U-Blox AG [u-blox 8]
+```
+
+- Note the number after the ID. In our case, `1546` is the Vendor ID and `01a8` is the Product ID
+- Now provide the following two commands. Put in the correct Vendor and Product IDs in the string below
+
+```bash
+echo 'ACTION=="add", ATTRS{idVendor}=="1546", ATTRS{idProduct}=="1102", SYMLINK+="gps" MODE="0666"' | sudo tee -a /etc/udev/rules.d/90-gps.rules
+sudo udevadm trigger
+```
+
+Give it a few seconds, and then check that there's a link called `gps` in your `/dev/` directory:
+
+```bash
+$ ls -als /dev/gps*
+0 lrwxrwxrwx 1 root root 7 Nov 18 23:20 /dev/gps -> ttyACM0
+$
 ```
 
 ### Downloading a template `docker-compose.yml` config file
@@ -183,8 +222,8 @@ environment:
     DW_EXTRA_CONFIGS=
        PARAM1 value string "here";
        PARAM2 "";
-       PARAM3;
-       PARAM4=remove;
+       uncomment:PARAM3;
+       comment:PARAM4;
        add:PARAM5 value string here
 ...
 ```

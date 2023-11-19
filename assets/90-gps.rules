@@ -1,0 +1,12 @@
+# u-blox AG, u-blox Antaris 4 [linux module: cdc_acm]
+ACTION=="add", ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a4", SYMLINK+="gps" MODE="0666"
+# u-blox AG, u-blox 5 [linux module: cdc_acm]
+ACTION=="add", ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a5", SYMLINK+="gps" MODE="0666"
+# u-blox AG, u-blox 6 [linux module: cdc_acm]
+ACTION=="add", ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a6", SYMLINK+="gps" MODE="0666"
+# u-blox AG, u-blox 7 [linux module: cdc_acm]
+ACTION=="add", ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a7", SYMLINK+="gps" MODE="0666"
+# u-blox AG, u-blox 8 [linux module: cdc_acm]
+ACTION=="add", ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a8", SYMLINK+="gps" MODE="0666"
+# u-blox AG, u-blox LISA-U2 [linux module: cdc_acm]
+ACTION=="add", ATTRS{idVendor}=="1546", ATTRS{idProduct}=="1102", SYMLINK+="gps" MODE="0666"

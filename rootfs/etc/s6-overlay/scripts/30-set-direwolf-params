@@ -57,33 +57,37 @@ function setdwconfig() {
         "${s6wrap[@]}" echo "[setdwconfig] error - no arguments. Usage: setdwconfig PARAMETER VALUE STRING"
         return 1
 
-    elif [[ -z "${2+x}" ]]; then
-        # $param is present but there's no value: uncomment if exists or add $param to the file if it doesn't exist
+    elif [[ -z "$value" ]]; then
+        # add or uncomment + replace $param with an empty value
         if grep -qo "^\s*#*\s*${param}\b.*$" "$DWCONFIGFILE"; then
-            sed -i "s|^\s*#*\s*\(${param}\b.*\)$|\1|g" "$DWCONFIGFILE"
+            sed -i "s|^\s*#*\s*\(${param}\b.*\)$|${param}|g" "$DWCONFIGFILE"
+            "${s6wrap[@]}" echo "[INFO] Replacing: ${param}"
         else
             echo "$param" >> "$DWCONFIGFILE"
+            "${s6wrap[@]}" echo "[INFO] Adding: ${param} ${value}"
         fi
     
-    elif [[ "$2" == "remove" ]]; then
+    elif [[ "${param:0:8}" == "comment:" ]]; then
         # comment out $param if it exists; do nothing if if doesn't exist
-        sed -i "s|^\s*#*\s*\(${param}\b.*\)$|# \1|g" "$DWCONFIGFILE"
+        sed -i "s|^\s*#*\s*\(${param:8}\b.*\)$|# \1|g" "$DWCONFIGFILE"
+        "${s6wrap[@]}" echo "[INFO] Commenting out (if it exists): ${param:8} ${value}"
+
+    elif [[ "${param:0:10}" == "uncomment:" ]]; then
+        # uncomment $param if it exists; do nothing if if doesn't exist
+        sed -i "s|^\s*#*\s*\(${param:10}\b.*\)$|\1|g" "$DWCONFIGFILE"
+        "${s6wrap[@]}" echo "[INFO] Uncommenting (if it exists): ${param:10} ${value}"
     
+    elif [[ "${param:0:4}" == "add:" ]]; then
+        echo -n "${param:4}${value:+ }${value}" >> "$DWCONFIGFILE"
+        "${s6wrap[@]}" echo "[INFO] Adding: ${param:4} ${value}"
+
     else
-        # $value has an (empty or non-empty) value:
-        # if $param exists in file, uncomment if needed and replace the existing value with the new value;
-        # if $param doesn't exist, add $param and $value to the end of the file  
-        if grep -qo "^\s*#*\s*${param}\b.*$" "$DWCONFIGFILE" && [[ "${param:0:4}" != "add:" ]]; then
+        if grep -qo "^\s*#*\s*${param}\b.*$" "$DWCONFIGFILE"; then
             sed -i "s|^\s*#*\s*${param}\b.*$|${param} ${value}|g" "$DWCONFIGFILE"
+            "${s6wrap[@]}" echo "[INFO] Replacing: ${param} ${value}"
         else
-            if [[ "${param:0:4}" == "add:" ]]; then param="${param:4}"; fi
-            {   echo -n "${param}"
-                if [[ -n "${value}" ]]; then
-                    echo " ${value}"
-                else
-                    echo ""
-                fi
-            } >> "$DWCONFIGFILE"
+            echo -n "${param} ${value}" >> "$DWCONFIGFILE"
+            "${s6wrap[@]}" echo "[INFO] Adding: ${param} ${value}"
         fi
     fi    
 }
@@ -308,12 +312,8 @@ if [[ -n "$DW_EXTRA_CONFIGS" ]]; then
         if [[ -z "${instance}" ]]; then
             # Instance empty: skip
             continue
-        elif ! grep -q '[[:space:]]' <<< "$instance"; then
-            # If there's no value, don't pass it in
-            setdwconfig "${param}"
         else
             setdwconfig "${param}" "${value}"
         fi
-        "${s6wrap[@]}" echo "[INFO] Setting ${param} ${value}"
     done
 fi
