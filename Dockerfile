@@ -37,7 +37,7 @@ LABEL org.opencontainers.image.source="https://github.com/sdr-enthusiasts/docker
 # start options presets for GPSD:
 ENV GPSD_START_DAEMON="false"
 ENV GPSD_OPTIONS="-n"
-ENV GPSD_DEVICES="/dev/ttyACM0"
+ENV GPSD_DEVICES="/dev/gps"
 ENV GPSD_USBAUTO="true"
 ENV GPSD_SOCKET="/var/run/gpsd.sock"
 
