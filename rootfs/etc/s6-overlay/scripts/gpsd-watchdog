@@ -46,7 +46,8 @@ done
 # sometimes it takes a few secs for the new device to become listed
 sleep 5
 
-gps_dev_new="$(find /dev/serial/by-id/ -iname "*gps*" -printf '%l\n' 2>/dev/null | awk -F/ '{print "/dev/" $NF}')"
+gps_dev_new="$(find /dev -iname "gps*" -print | head -1)"
+gps_dev_new="${gps_dev_new:-$(find /dev/serial/by-id/ -iname "*gps*" -printf '%l\n' 2>/dev/null | awk -F/ '{print "/dev/" $NF}')}"
 
 "${s6wrap[@]}" echo "[WARNING] GPS device has changed ports! Old port: ${GPSD_DEVICES} New port: ${gps_dev_new:-unknown}"
 "${s6wrap[@]}" echo "[WARNING] Restarting GPSD!"
