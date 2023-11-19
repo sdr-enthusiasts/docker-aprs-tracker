@@ -78,7 +78,7 @@ function setdwconfig() {
         "${s6wrap[@]}" echo "[INFO] Uncommenting (if it exists): ${param:10} ${value}"
     
     elif [[ "${param:0:4}" == "add:" ]]; then
-        echo -n "${param:4}${value:+ }${value}" >> "$DWCONFIGFILE"
+        echo "${param:4}${value:+ }${value}" >> "$DWCONFIGFILE"
         "${s6wrap[@]}" echo "[INFO] Adding: ${param:4} ${value}"
 
     else
@@ -86,7 +86,7 @@ function setdwconfig() {
             sed -i "s|^\s*#*\s*${param}\b.*$|${param} ${value}|g" "$DWCONFIGFILE"
             "${s6wrap[@]}" echo "[INFO] Replacing: ${param} ${value}"
         else
-            echo -n "${param} ${value}" >> "$DWCONFIGFILE"
+            echo "${param} ${value}" >> "$DWCONFIGFILE"
             "${s6wrap[@]}" echo "[INFO] Adding: ${param} ${value}"
         fi
     fi    
