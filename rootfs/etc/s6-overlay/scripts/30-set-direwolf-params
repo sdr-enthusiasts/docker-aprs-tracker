@@ -126,7 +126,7 @@ else
 fi
 
 # Figure out which NumID the mute button is unmute (which means set Mic Capture Switch = on):
-capability="Mic Capture Switch"
+capability="Capture Switch'$"
 if amixer --card "$AUDIOCARD" contents | grep -qo "$capability"; then
     "${s6wrap[@]}" echo "[INFO] Unmuting the microphone on Audio Card $AUDIOCARD ($capability on)"
     "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep "$capability" | sed  -n 's|numid=\([0-9]\+\).*|\1|p')" on
@@ -139,7 +139,7 @@ else
 fi 
 
 # Unmuting the audio output
-capability="Speaker Playback Switch\|PCM Playback Switch"
+capability="Playback Switch'$"
 if amixer --card "$AUDIOCARD" contents | grep -q "$capability"; then
     "${s6wrap[@]}" echo "[INFO] Unmuting the speaker on Audio Card $AUDIOCARD ($capability on)"
     "${s6wrap[@]}" amixer -q -c "$AUDIOCARD" cset numid="$(amixer --card "$AUDIOCARD" contents|grep "$capability" | sed  -n 's|numid=\([0-9]\+\).*|\1|p')" on
@@ -152,7 +152,7 @@ else
 fi 
 
 # Set input audio level to $AUDIOLEVEL_RX or 90% of the scale if it's not defined
-capability="Mic Capture Volume"
+capability="Capture Volume'$"
 unset couldnt_set
 if amixer --card "$AUDIOCARD" contents | grep -q "$capability"; then
     audio_min="$(amixer --card "$AUDIOCARD" contents | grep -A1 "$capability" | sed -n 's|^.*,min=\([0-9]\+\).*$|\1|p')"
@@ -185,7 +185,7 @@ if amixer --card "$AUDIOCARD" contents | grep -q "$capability"; then
 fi
 
 # Set output audio level to $AUDIOLEVEL_TX or halfway the scale if it's not defined
-capability="Speaker Playback Volume\|PCM Playback Volume"
+capability="Playback Volume'$"
 unset couldnt_set
 if amixer --card "$AUDIOCARD" contents | grep -q "$capability"; then
     audio_min="$(amixer --card "$AUDIOCARD" contents | grep -A1 "$capability" | sed -n 's|^.*,min=\([0-9]\+\).*$|\1|p')"
