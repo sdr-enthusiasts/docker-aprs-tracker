@@ -41,7 +41,12 @@ ENV GPSD_DEVICES="/dev/gps"
 ENV GPSD_USBAUTO="true"
 ENV GPSD_SOCKET="/var/run/gpsd.sock"
 
-RUN set -x && \
+ARG VERSION_REPO="sdr-enthusiasts/docker-aprs-tracker" \
+    VERSION_BRANCH="##BRANCH##"
+
+RUN --mount=type=bind,from=gpds-build,source=/,target=/gpsd-build/ \
+    --mount=type=bind,from=chrony-build,source=/,target=/chrony-build/ \
+    set -x && \
     # generic packages
     TEMP_PACKAGES=() && \
     KEPT_PACKAGES=() && \
@@ -65,10 +70,17 @@ RUN set -x && \
         "${KEPT_PACKAGES[@]}" \
         "${TEMP_PACKAGES[@]}" \
         && \
+    # copy files from build stages:
+    cp /gpsd-build/usr/sbin/gpsd /usr/sbin/gpsd && \
+    cp /chrony-build/usr/sbin/chronyd /usr/sbin/chronyd && \
+    cp /chrony-build/etc/chrony/chrony.keys /etc/chrony/chrony.keys && \
     # Do some other stuff
     echo "alias dir=\"ls -alsv\"" >> /root/.bashrc && \
     echo "alias nano=\"nano -l\"" >> /root/.bashrc && \
-    #
+    # Add Container Version
+    { [[ "${VERSION_BRANCH:0:1}" == "#" ]] && VERSION_BRANCH="main" || true; } && \
+    echo "$(TZ=UTC date +%Y%m%d-%H%M%S)_$(curl -ssL "https://api.github.com/repos/$VERSION_REPO/commits/$VERSION_BRANCH" | awk '{if ($1=="\"sha\":") {print substr($2,2,7); exit}}')_$VERSION_BRANCH" > /CONTAINER_VERSION && \
+    cp /CONTAINER_VERSION /IMAGE_VERSION && \
     # clean up
     if [[ "${#TEMP_PACKAGES[@]}" -gt 0 ]]; then \
         apt-get remove -y "${TEMP_PACKAGES[@]}"; \
@@ -78,9 +90,6 @@ RUN set -x && \
     # set CONTAINER_VERSION:
     rm -rf /src/* /tmp/* /var/lib/apt/lists/*
 
-COPY --from=gpsd-build /usr/sbin/gpsd /usr/sbin/gpsd
-COPY --from=chrony-build /usr/sbin/chronyd /usr/sbin/chronyd
-COPY --from=chrony-build /etc/chrony/chrony.keys /etc/chrony/chrony.keys
 COPY --from=container-version /.CONTAINER_VERSION /.CONTAINER_VERSION
 COPY rootfs/ /
 
