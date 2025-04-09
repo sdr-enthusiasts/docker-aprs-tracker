@@ -9,34 +9,6 @@ RUN set -x && \
     apt-get install -q -o Dpkg::Options::="--force-confnew" -y --no-install-recommends  --no-install-suggests \
     "${KEPT_PACKAGES[@]}"
 
-FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base AS chrony-build
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN set -x && \
-    # install packages
-    KEPT_PACKAGES=() && \
-    KEPT_PACKAGES+=(chrony) && \
-    apt-get update && \
-    apt-get install -q -o Dpkg::Options::="--force-confnew" -y --no-install-recommends  --no-install-suggests \
-    "${KEPT_PACKAGES[@]}"
-
-# Add Container Version
-FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base AS container-version
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN set -x && \
-    KEPT_PACKAGES=() && \
-    KEPT_PACKAGES+=(git) && \
-    apt-get update && \
-    apt-get install -q -o Dpkg::Options::="--force-confnew" -y --no-install-recommends  --no-install-suggests \
-    "${KEPT_PACKAGES[@]}" && \
-    #
-    branch="##BRANCH##" && \
-    { [[ "${branch:0:1}" == "#" ]] && branch="main" || true; } && \
-    git clone --depth=1 -b "$branch" https://github.com/sdr-enthusiasts/docker-aprs-tracker.git && \
-    cd docker-aprs-tracker && \
-    echo "$(TZ=UTC date +%Y%m%d-%H%M%S)_$(git rev-parse --short HEAD)_$(git branch --show-current)" > /.CONTAINER_VERSION
-
 FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base
 LABEL org.opencontainers.image.source="https://github.com/sdr-enthusiasts/docker-aprs-tracker"
 
@@ -52,7 +24,6 @@ ARG VERSION_REPO="sdr-enthusiasts/docker-aprs-tracker" \
     VERSION_BRANCH="##BRANCH##"
 
 RUN --mount=type=bind,from=gpsd-build,source=/,target=/gpsd-build/ \
-    --mount=type=bind,from=chrony-build,source=/,target=/chrony-build/ \
     set -x && \
     # generic packages
     TEMP_PACKAGES=() && \
@@ -70,6 +41,8 @@ RUN --mount=type=bind,from=gpsd-build,source=/,target=/gpsd-build/ \
     # packages for direwolf
     KEPT_PACKAGES+=(direwolf) && \
     KEPT_PACKAGES+=(alsa-utils) && \
+    # chrony
+    KEPT_PACKAGES+=(chrony) && \
     #
     # install packages
     apt-get update && \
@@ -79,8 +52,6 @@ RUN --mount=type=bind,from=gpsd-build,source=/,target=/gpsd-build/ \
     && \
     # copy files from build stages:
     cp /gpsd-build/usr/sbin/gpsd /usr/sbin/gpsd && \
-    cp /chrony-build/usr/sbin/chronyd /usr/sbin/chronyd && \
-    cp /chrony-build/etc/chrony/chrony.keys /etc/chrony/chrony.keys && \
     # Do some other stuff
     echo "alias dir=\"ls -alsv\"" >> /root/.bashrc && \
     echo "alias nano=\"nano -l\"" >> /root/.bashrc && \
@@ -97,7 +68,6 @@ RUN --mount=type=bind,from=gpsd-build,source=/,target=/gpsd-build/ \
     # set CONTAINER_VERSION:
     rm -rf /src/* /tmp/* /var/lib/apt/lists/*
 
-COPY --from=container-version /.CONTAINER_VERSION /.CONTAINER_VERSION
 COPY rootfs/ /
 
 EXPOSE 2947
