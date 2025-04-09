@@ -1,4 +1,4 @@
-version: '3.8'
+---
 services:
   aprs:
     image: ghcr.io/sdr-enthusiasts/docker-aprs-tracker
@@ -12,24 +12,24 @@ services:
     cap_add:
       - SYS_TIME
       - SYS_RESOURCE
-#    privileged: true
+    #    privileged: true
     environment:
       - VERBOSE=false
       - MYCALL=KX1T-1
       - DW_DEBUG=togm
       - DW_EXTRA_CONFIGS=
-            TXDELAY=30;
-            add:CBEACON every=1:00 delay=0:10 SYMBOL=RH VIA=WIDE1-1,WIDE2-1 infocmd="telem-parm.pl KX1T-1 time_of_measurment ionizing_bg_radiation";
-            add:CBEACON every=1:00 delay=0:12 SYMBOL=RH VIA=WIDE1-1,WIDE2-1 infocmd="telem-unit.pl KX1T-1 secs_since_epoch nSv/h";
-            add:CBEACON every=1:00 delay=0:14 SYMBOL=RH VIA=WIDE1-1,WIDE2-1 infocmd="telem-data.pl KX1T-1 $(/tools/get_geiger.sh)";
-            add:CBEACON every=1:00 delay=0:16 SYMBOL=RH VIA=WIDE1-1,WIDE2-1 infocmd="telem-bits.pl KX1T-1 11111111 ""https://kx1t.com/geiger Belmont MA"" ";
-            TBEACON remove;
-            SMARTBEACONING remove;
+          TXDELAY=30;
+          add:CBEACON every=1:00 delay=0:10 SYMBOL=RH VIA=WIDE1-1,WIDE2-1 infocmd="telem-parm.pl KX1T-1 time_of_measurment ionizing_bg_radiation";
+          add:CBEACON every=1:00 delay=0:12 SYMBOL=RH VIA=WIDE1-1,WIDE2-1 infocmd="telem-unit.pl KX1T-1 secs_since_epoch nSv/h";
+          add:CBEACON every=1:00 delay=0:14 SYMBOL=RH VIA=WIDE1-1,WIDE2-1 infocmd="telem-data.pl KX1T-1 $(/tools/get_geiger.sh)";
+          add:CBEACON every=1:00 delay=0:16 SYMBOL=RH VIA=WIDE1-1,WIDE2-1 infocmd="telem-bits.pl KX1T-1 11111111 ""https://kx1t.com/geiger Belmont MA"" ";
+          TBEACON remove;
+          SMARTBEACONING remove;
       - DW_EXTRA_CMDLINEARGS=-r 48000
       - AUDIOLEVEL_TX=64
       - DW_TB_COMMENT="Ramon kx1t@amsat.org https://kx1t.com"
       - DW_WAIT_GPSD=false
-#      - DW_DONTSTART=true
+      #      - DW_DONTSTART=true
     devices:
       - /dev/snd:/dev/snd
     tmpfs:
@@ -37,7 +37,7 @@ services:
       - /tmp:size=32M
       - /var/log:size=32M
     ports:
-       - 2947:2947
+      - 2947:2947
     volumes:
       - "/etc/localtime:/etc/localtime:ro"
       - "/etc/timezone:/etc/timezone:ro"

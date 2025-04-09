@@ -10,14 +10,11 @@ on:
     branches:
       - main
     # Don't trigger if it's just a documentation update
-    paths-ignore:
-      - "**.md"
-      - "**.MD"
+    paths:
+      - "Dockerfile**"
+      - "rootfs/**"
       - "**.yml"
-      - "LICENSE"
-      - ".gitattributes"
-      - ".gitignore"
-      - ".dockerignore"
+      - "**.yaml"
 
 jobs:
   test-build:
@@ -25,3 +22,8 @@ jobs:
     uses: sdr-enthusiasts/common-github-workflows/.github/workflows/build_and_push_image.yml@main
     with:
       push_enabled: false
+      platform_linux_arm32v6_enabled: false
+      platform_linux_i386_enabled: false
+      build_version_specific: false
+      build_platform_specific: false
+      build_nohealthcheck: false
