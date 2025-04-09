@@ -51,7 +51,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG VERSION_REPO="sdr-enthusiasts/docker-aprs-tracker" \
     VERSION_BRANCH="##BRANCH##"
 
-RUN --mount=type=bind,from=gpds-build,source=/,target=/gpsd-build/ \
+RUN --mount=type=bind,from=gpsd-build,source=/,target=/gpsd-build/ \
     --mount=type=bind,from=chrony-build,source=/,target=/chrony-build/ \
     set -x && \
     # generic packages
