@@ -10,6 +10,8 @@ Table of Contents
     - [Base, barebones Linux image](#base-barebones-linux-image)
     - [Creation of a new non-root user](#creation-of-a-new-non-root-user)
     - [Installation of Docker](#installation-of-docker)
+    - [Preparing your system for use with your container](#preparing-your-system-for-use-with-your-container)
+    - [Adding your GPS to the `udev` rules](#adding-your-gps-to-the-udev-rules)
     - [Downloading a template `docker-compose.yml` config file](#downloading-a-template-docker-composeyml-config-file)
     - [Configuration of your data](#configuration-of-your-data)
       - [MUST CHANGE parameters](#must-change-parameters)
@@ -57,14 +59,14 @@ If you need help installing Linux, read on...
 
 ### Base, barebones Linux image
 
-- Start with a minimalist Debian image that works for your hardware device. Personally, I like [DietPi](https://dietpi.com/), but in the absense of this, you can use Raspberry Pi OS (lite) or a standard Debian build. Make sure to pick one that is as barebones as possible; no need for Desktop applications, etc.
+- Start with a minimalist Debian image that works for your hardware device. Personally, I like [DietPi](https://dietpi.com/), but in the absence of this, you can use Raspberry Pi OS (lite) or a standard Debian build. Make sure to pick one that is as barebones as possible; no need for Desktop applications, etc.
 - Burn the image to a SD card, and go through the initial setup
 
 ### Creation of a new non-root user
 
 - While setting things up, make sure you are connected to the internet!
 - If your Linux distribution doesn't do so, please create a non-root user account, for example with `sudo adduser aprs` . (We're using username `aprs`, but you can change this to your liking). Note -- if you use DietPi, the system will create a default user `dietpi`. You can use this account instead of creating a new user.
-- Make sure that the user `aprs` is set up for `sudo` access; see the code snippet below. (If approriate, change `aprs` to `dietpi` or whatever the username is you are using)
+- Make sure that the user `aprs` is set up for `sudo` access; see the code snippet below. (If appropriate, change `aprs` to `dietpi` or whatever the username is you are using)
 - then log out from the `root` account and log back in with the username and password you just created.
 
 ```bash
@@ -101,7 +103,7 @@ Then we will put a `udev` rule in place that ensures that your USB/Serial GPS al
 ```bash
 # Remove any system services that may interfere with the container.
 # The container will take care of setting the system time, so we don't need these services on the host
-sudo systemctl disable systemd-timesyncd -q --now 
+sudo systemctl disable systemd-timesyncd -q --now
 sudo systemctl disable chrony -q --now
 sudo systemctl disable ntpd -q --now
 sudo systemctl disable gpsd -q --now
