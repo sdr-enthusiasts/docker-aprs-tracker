@@ -6,26 +6,26 @@ services:
     hostname: aprs
     restart: always
     device_cgroup_rules:
-      - 'c 189:* rwm'   # expose USB devices to the container
-      - 'c 166:* rwm'   # expose Serial devices (incl. GPS Serial2USB devices) to the container
-    cap_add:      # needed for chrony to be able to set the clock
+      - "c 189:* rwm" # expose USB devices to the container
+      - "c 166:* rwm" # expose Serial devices (incl. GPS Serial2USB devices) to the container
+    cap_add: # needed for chrony to be able to set the clock
       - SYS_TIME
       - SYS_RESOURCE
     environment:
       - VERBOSE=false
-      - MYCALL=NOCALL     # set your callsign before using the container!
+      - MYCALL=NOCALL # set your callsign before using the container!
       - DW_EXTRA_CONFIGS=TXDELAY=30
       - DW_EXTRA_CMDLINEARGS=-r 48000
       - DW_TB_COMMENT="Myname nocall@amsat.org"
       - AUDIOLEVEL_TX=64
-     # - DW_DEBUG=tog
-     # - DW_DONTSTART=true
+      # - DW_DEBUG=tog
+      # - DW_DONTSTART=true
     tmpfs:
       - /run:exec,size=32M
       - /tmp:size=32M
       - /var/log:size=32M
     ports:
-      - 2947:2947    # exposes the GPSD port in case you want to use it for other purposes on the device
+      - 2947:2947 # exposes the GPSD port in case you want to use it for other purposes on the device
     volumes:
       - "/etc/localtime:/etc/localtime:ro"
       - "/etc/timezone:/etc/timezone:ro"
