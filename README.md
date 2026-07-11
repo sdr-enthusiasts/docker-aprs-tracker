@@ -257,7 +257,7 @@ I have found that tuning the audio interface in order to properly send and recei
     - set `4 - VOX` to `9`
     - set `5 - WN` to `narrow`
     - switch off all extra transmissions, power-saver, roger-beeps, tones, lights, etc. The menu items I switched off were `3 - SAVE`, `6 - ABR`, `7 - TDR`, `8 - BEEP`, `10 - R-DCS`, `12 - T-DCS`, `16 - DTMFST`, `19 - PTT-ID`, `23 - BCL`, `25 - SFT-D`, `30 - RX-LED`, `35 - STE`, `36 - RP_STE`, `37 - RPT_RL`, and `39 - ROGER`
-    - tune to `144.390` (North America frequency; the frequencies for other regions can be found [here](https://www.sigidwiki.com/wiki/Automatic_Packet_Reporting_System_(APRS)#Frequencies))
+    - tune to `144.390` (North America frequency; the frequencies for other regions can be found [on the sigidwiki](https://www.sigidwiki.com/wiki/Automatic_Packet_Reporting_System_(APRS)#Frequencies))
     - lock the device so you don't accidentally change the frequency or settings
 - For audio RECEPTION on your APRS tracker container:
   - Start with  `AUDIOLEVEL_RX=90` (which is the default)
