@@ -19,9 +19,14 @@ ENV GPSD_DEVICES="/dev/gps"
 ENV GPSD_USBAUTO="true"
 ENV GPSD_SOCKET="/var/run/gpsd.sock"
 
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG VERSION_REPO="sdr-enthusiasts/docker-aprs-tracker" \
     VERSION_BRANCH="##BRANCH##"
+
+# SHELL must come *after* any ARG/ENV in the stage. hadolint 2.15.x resets its
+# shell-dialect tracking to POSIX sh when an ARG or ENV follows SHELL, which
+# makes every later RUN be linted as sh and spuriously reports SC3054 for the
+# bash arrays below.
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN --mount=type=bind,from=gpsd-build,source=/,target=/gpsd-build/ \
     set -x && \
