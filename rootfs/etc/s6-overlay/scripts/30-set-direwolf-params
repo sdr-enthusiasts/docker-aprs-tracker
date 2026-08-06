@@ -102,6 +102,11 @@ if [[ -z "$AUDIOCARD" ]]; then
         "${s6wrap[@]}" arecord --list-devices
         "${s6wrap[@]}" echo "[FATAL] You MUST fix this, or set variable AUDIOCARD to the desired audio card number."
         "${s6wrap[@]}" echo "[FATAL] We are stopping the execution of the container now."
+        # Hanging keeps these logs readable for a user, but it also blocks s6-rc
+        # bringup, so nothing in the container starts and CI cannot inspect it.
+        # Under verification, declare the expected environmental failure instead.
+        # Users never set SDRE_VERIFY, so their behaviour is unchanged.
+        [[ -n "${SDRE_VERIFY:-}" ]] && exit 78
         sleep infinity & wait $!
     else
         "${s6wrap[@]}" echo "[INFO] System determined that we are using audio card #$AUDIOCARD"
@@ -222,6 +227,11 @@ else
     "${s6wrap[@]}" echo "[FATAL] You must set your callsign in the MYCALL env variable!"
     "${s6wrap[@]}" echo "[FATAL] Currently, MYCALL is set to $([[ -n "$MYCALL" ]] && echo "${MYCALL^^}, which is an invalid callsign! Only use A-Z, 0-9 in your callsign, and any suffix must begin with \"-\" followed by 1 or 2 digits, for example 0A0AA-10." || echo "empty.")"
     "${s6wrap[@]}" echo "[FATAL] Terminating container execution. Fix this and try again."
+    # Hanging keeps these logs readable for a user, but it also blocks s6-rc
+    # bringup, so nothing in the container starts and CI cannot inspect it.
+    # Under verification, declare the expected environmental failure instead.
+    # Users never set SDRE_VERIFY, so their behaviour is unchanged.
+    [[ -n "${SDRE_VERIFY:-}" ]] && exit 78
     sleep infinity & wait $!
 fi
 if [[ -n "$PTT" ]]; then
