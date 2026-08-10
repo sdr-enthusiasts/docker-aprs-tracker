@@ -54,7 +54,7 @@ jobs:
     if: ${{ needs.version_in_container.outputs.currver != needs.latest_version.outputs.latestver }}
     runs-on: ubuntu-latest
     env:
-      WORKFLOW_AUTH_TOKEN: ${{ secrets.GH_PAT_MIKENYE }}
+      WORKFLOW_AUTH_TOKEN: ${{ secrets.PAT }}
       WORKFLOW_REPO: ${{ github.repository }}
       WORKFLOW_FILE: deploy.yml
       WORKFLOW_REASON: "triggered via check_versions.yml in ${{ github.repository }}"
